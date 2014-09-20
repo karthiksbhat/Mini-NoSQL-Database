@@ -10,7 +10,7 @@ def main1():
 	direc=lucene.SimpleFSDirectory(lucene.File(INDEX_DIR))
 	analyzer=lucene.StandardAnalyzer(lucene.Version.LUCENE_CURRENT)
 	config=lucene.IndexWriterConfig(lucene.Version.LUCENE_CURRENT,analyzer)
-	config.setOpenMode(lucene.IndexWriterConfig.OpenMode.CREATE)
+	config.setOpenMode(lucene.IndexWriterConfig.OpenMode.CREATE_OR_APPEND)
 	writer=lucene.IndexWriter(direc,config)
 	
 	#fix this later.....FieldType not defined
