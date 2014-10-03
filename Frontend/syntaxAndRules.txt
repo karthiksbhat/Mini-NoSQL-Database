@@ -1,0 +1,27 @@
+Thank you for using this <unnamed> NoSQL database v0.1, with the <unnamed> Language. We define here the rules of the language. We have tried to make it as user friendly as possible, and if you think something needs to be changed, please feel free to access our source code at http://github.com/karthiksbhat/Mini-NoSQL-Database and contribute to it.
+
+Simple Rules
+1. No commas. Period.
+
+Syntax
+1. Insert
+	This is a command to insert an entry to a collection.
+	Syntax
+		"insert in <collection-name> <primary-key>:<value> <primary-key>:<value>(this is if more than one attribute is a primary key) <attributes>:<values>"
+
+	If this is the first insertion to a collection, there will be a prompt asking for the primary keys to be specified.
+
+2. Modify
+	This is a command to modify an entered entry to the collection.
+	Syntax
+		"modify collection where primary key is <value> new values are <attribute>:<value>"
+
+3. Delete
+	This is a command to delete an entry in the collection.
+	Syntax
+		"delete from collection where primary key is <value>""
+
+4. Display
+	This is a command to display all elements in a collection.
+	Syntax
+		"display collection where primary key is <value>"
