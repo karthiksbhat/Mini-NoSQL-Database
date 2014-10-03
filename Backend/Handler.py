@@ -86,25 +86,48 @@ def  search(collection_name,tofind):
 	except:
 		return 105
 
+	#initializing return list 
 	return_list=[]
-	if len(tofind_keyvalue_pairs)>0:		
+	check_list=[]
+	tofind_primary_keyvalue_pairs={}
+	tofind_nonprimary_keyvalue_pairs={}
+
+	#separating out primary and non_primary keys
+	for key in tofind_keyvalue_pairs.keys():
+		if key in primary_keys_map[collection_name]:
+			tofind_primary_keyvalue_pairs[key]=tofind_keyvalue_pairs[key]
+		else:
+			tofind_nonprimary_keyvalue_pairs[key]=tofind_keyvalue_pairs[key]
+
+	#filtering documents according to primary keys		
+	if len(tofind_primary_keyvalue_pairs)>0:		
 		query=lucene.BooleanQuery()
-		for key in tofind_keyvalue_pairs.keys():
-			#add filtering for non primary keys as well###########IMPORTANT
-			if key in primary_keys_map[collection_name]:
-				temp=lucene.QueryParser(lucene.Version.LUCENE_CURRENT,key,analyzer).parse(tofind_keyvalue_pairs[key])
-				query.add(lucene.BooleanClause(temp,lucene.BooleanClause.Occur.MUST))
+		for key in tofind_primary_keyvalue_pairs.keys():
+			temp=lucene.QueryParser(lucene.Version.LUCENE_CURRENT,key,analyzer).parse(tofind_primary_keyvalue_pairs[key])
+			query.add(lucene.BooleanClause(temp,lucene.BooleanClause.Occur.MUST))
 		hits=searcher.search(query,MAX_RESULTS).scoreDocs
 		
 		for hit in hits:
 			doc=searcher.doc(hit.doc)
-			return_list.append(doc.get("$DATA$"))
+			check_list.append(doc.get("$DATA$"))
 	else:
 		for i in range(0,searcher.maxDoc()):
 			doc=searcher.doc(i)
-			return_list.append(doc.get("$DATA$"))
+			check_list.append(doc.get("$DATA$"))
 
-	
+	#filtering documents according to non primary keys ###########find a better method.more efficient
+	if len(tofind_nonprimary_keyvalue_pairs)>0:
+		for record in check_list:
+			entry=json.loads(record)
+			satisfied=True
+			for key in tofind_nonprimary_keyvalue_pairs.keys():
+				if entry.get(key)!=tofind_nonprimary_keyvalue_pairs[key]:
+					satisfied=False
+					break
+			if satisfied==True:
+				return_list.append(record)
+	else:
+		return_list=check_list
 
 	
 
