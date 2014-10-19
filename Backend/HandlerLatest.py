@@ -2,14 +2,6 @@ import lucene
 import simplejson as json
 import os
 import csv
-from org.apache.lucene.store import FSDirectory, SimpleFSDirectory
-from org.apache.lucene.analysis.standard import StandardAnalyzer
-from org.apache.lucene.index import IndexWriter, IndexWriterConfig, IndexReader
-from org.apache.lucene.search import IndexSearcher, BooleanQuery, BooleanClause
-from org.apache.lucene.util import Version
-from org.apache.lucene.queryparser.classic import QueryParser
-from org.apache.lucene.document import Document, Field
-from java.io import File
 
 INDEX_DIR_DEFAULT="IndexFiles.index"     #default value
 primary_keys_map={}
@@ -29,18 +21,17 @@ def store(collection_name,data):
 		return 100
 
 
-	direc=SimpleFSDirectory(File(INDEX_DIR))
-	analyzer=StandardAnalyzer(Version.LUCENE_CURRENT)
+	direc=lucene.SimpleFSDirectory(lucene.File(INDEX_DIR))
+	analyzer=lucene.StandardAnalyzer(lucene.Version.LUCENE_CURRENT)
 	
 
 	#checking for existance of record with same primary_key set
 	try:
-		ireader=IndexReader.open(direc)	
-		searcher=IndexSearcher(ireader)
-		query=BooleanQuery()
+		searcher=lucene.IndexSearcher(direc)
+		query=lucene.BooleanQuery()
 		for key in primary_keys_map[INDEX_DIR]:
-			temp=QueryParser(Version.LUCENE_CURRENT,key,analyzer).parse(contents[key])
-			query.add(BooleanClause(temp,BooleanClause.Occur.MUST))
+			temp=lucene.QueryParser(lucene.Version.LUCENE_CURRENT,key,analyzer).parse(contents[key])
+			query.add(lucene.BooleanClause(temp,lucene.BooleanClause.Occur.MUST))
 		hits=searcher.search(query,MAX_RESULTS).scoreDocs
 		if len(hits) > 0:
 			return 106
@@ -51,34 +42,29 @@ def store(collection_name,data):
 
 
 	#setting writer configurations
-	config=IndexWriterConfig(Version.LUCENE_CURRENT,analyzer)
-	config.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND)
-	writer=IndexWriter(direc,config)
+	config=lucene.IndexWriterConfig(lucene.Version.LUCENE_CURRENT,analyzer)
+	config.setOpenMode(lucene.IndexWriterConfig.OpenMode.CREATE_OR_APPEND)
+	writer=lucene.IndexWriter(direc,config)
 	#fix this later.....FieldType not defined
-	#field_type=FieldType()
+	#field_type=lucene.FieldType()
 	#field_type.setIndexed(True)
 	#field_type.setStored(False)
 	#field_type.setTokenized(False)
 	
 	try:
-		doc=Document()
+		doc=lucene.Document()
 		#index files wrt primary key
 		for primary_key in primary_keys_map[collection_name]:
 			try:
-				field=Field(primary_key,contents[primary_key],Field.Store.NO,Field.Index.ANALYZED)
+				field=lucene.Field(primary_key,contents[primary_key],lucene.Field.Store.NO,lucene.Field.Index.ANALYZED)
 				doc.add(field)
 			except:
 				primary_keys_map.pop(collection_name)
 				return 101
-		print "here1"
-		field=Field("$DATA$",data,Field.Store.YES,Field.Index.ANALYZED)
-		print "here2"
+		field=lucene.Field("$DATA$",data,lucene.Field.Store.YES,lucene.Field.Index.ANALYZED)
 		doc.add(field)
-		print "here3"
 		writer.addDocument(doc)
-		print "here4"
-		writer.commit()
-		print "here5"
+		writer.optimize()
 		writer.close()
 		return 000
 	except:
@@ -93,11 +79,10 @@ def  search(collection_name,tofind):
 		tofind_keyvalue_pairs=json.loads(tofind)
 	except:
 		return 100	
-	direc=SimpleFSDirectory(File(INDEX_DIR))
-	analyzer=StandardAnalyzer(Version.LUCENE_CURRENT)
-	try:
-		ireader=IndexReader.open(direc)	
-		searcher=IndexSearcher(ireader)
+	direc=lucene.SimpleFSDirectory(lucene.File(INDEX_DIR))
+	analyzer=lucene.StandardAnalyzer(lucene.Version.LUCENE_CURRENT)
+	try:	
+		searcher=lucene.IndexSearcher(direc)
 	except:
 		return 105
 
@@ -116,17 +101,17 @@ def  search(collection_name,tofind):
 
 	#filtering documents according to primary keys		
 	if len(tofind_primary_keyvalue_pairs)>0:		
-		query=BooleanQuery()
+		query=lucene.BooleanQuery()
 		for key in tofind_primary_keyvalue_pairs.keys():
-			temp=QueryParser(Version.LUCENE_CURRENT,key,analyzer).parse(tofind_primary_keyvalue_pairs[key])
-			query.add(BooleanClause(temp,BooleanClause.Occur.MUST))
+			temp=lucene.QueryParser(lucene.Version.LUCENE_CURRENT,key,analyzer).parse(tofind_primary_keyvalue_pairs[key])
+			query.add(lucene.BooleanClause(temp,lucene.BooleanClause.Occur.MUST))
 		hits=searcher.search(query,MAX_RESULTS).scoreDocs
 		
 		for hit in hits:
 			doc=searcher.doc(hit.doc)
 			check_list.append(doc.get("$DATA$"))
 	else:
-		for i in range(0,ireader.numDocs()):
+		for i in range(0,searcher.maxDoc()):
 			doc=searcher.doc(i)
 			check_list.append(doc.get("$DATA$"))
 
@@ -157,30 +142,15 @@ def number(collection_name):
 	else:
 		INDEX_DIR=INDEX_DIR_DEFAULT
 		
-	direc=SimpleFSDirectory(File(INDEX_DIR))
-  	analyzer=StandardAnalyzer(Version.LUCENE_CURRENT)
+	direc=lucene.SimpleFSDirectory(lucene.File(INDEX_DIR))
+  	analyzer=lucene.StandardAnalyzer(lucene.Version.LUCENE_CURRENT)
   	try:
-  		ireader=IndexReader.open(direc)
+  		searcher=lucene.IndexSearcher(direc)
   	except:
   		return 105
-  	numdocs = int(ireader.numDocs())
+  	numdocs = int(searcher.maxDoc())
   	
   	return numdocs
-
-def delete(collection_name,todelete):
-	if collection_name!="DEFAULT":
-		INDEX_DIR=collection_name
-	else:
-		INDEX_DIR=INDEX_DIR_DEFAULT	
-	
-
-	direc=SimpleFSDirectory(File(INDEX_DIR))
-	analyzer=StandardAnalyzer(Version.LUCENE_CURRENT)
-
-	reader=IndexReader.open(direc)
-
-
-
 
 
 if __name__ == "__main__":
@@ -188,9 +158,9 @@ if __name__ == "__main__":
 
 	#####load required resources from metafile ##################
 	print "Initialized lucene with version number :",lucene.VERSION
-	if os.path.exists("collectionmetafile.csv"):	
+	if os.path.exists("metafile.csv"):	
 		
-		f=open("collectionmetafile.csv",'rb')
+		f=open("metafile.csv",'rb')
 		for key, val in csv.reader(f):
 			primary_keys_map[key]=eval(val)
 
@@ -200,7 +170,7 @@ if __name__ == "__main__":
 	###remove this lame if else conditional execution
 	
 	while(True):
-		choice=raw_input("Enter operation to be performed(store,select,delete,number,exit)")
+		choice=raw_input("Enter operation to be performed(store,select,number,exit)")
 		if (choice=="store"):
 						collection_name=raw_input("Enter name of the Collection(ENTER \"DEFAULT\" for default table)::")
 						
@@ -262,10 +232,6 @@ if __name__ == "__main__":
 						else:
 							print "error in Retrieval!"
 							continue
-		elif (choice=="delete"):
-						collection_name=raw_input("Enter name of the Collection(ENTER \"DEFAULT\" for default table)::")
-						delete(collection_name,None)
-						break
 		elif (choice=="number"):
 						collection_name=raw_input("Enter name of the Collection(ENTER \"DEFAULT\" for default table)::")
 						SUCCESS_MESSAGE=number(collection_name)
@@ -276,7 +242,7 @@ if __name__ == "__main__":
 							print SUCCESS_MESSAGE
 		elif (choice=="exit"):
 						if len(primary_keys_map) > 0:
-							f=open("collectionmetafile.csv","wb")
+							f=open("metafile.csv","wb")
 							w = csv.writer(f)
 							for key, val in primary_keys_map.items():
 								w.writerow([key, val])

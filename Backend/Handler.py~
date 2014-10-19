@@ -264,4 +264,4 @@ if __name__ == "__main__":
 	#4)Storage can be done in BSON instead of JSON
 	#5)Basic understanding is that we retrieve documents based on some primary_keys and process the returned records for further 
 	#  filtering by parsing the JSON/BSON documents stored
-	
+	#6)IMPORTATNT check comment on line number 93!!	
