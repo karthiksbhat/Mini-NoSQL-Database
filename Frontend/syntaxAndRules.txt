@@ -14,14 +14,14 @@ Syntax
 2. Modify
 	This is a command to modify an entered entry to the collection.
 	Syntax
-		"modify collection where primary key is <value> new values are <attribute>:<value>"
+		"modify collection where <primary-key> <value> new values are <attribute>:<value>"
 
 3. Delete
 	This is a command to delete an entry in the collection.
 	Syntax
-		"delete from collection where primary key is <value>""
+		"delete from collection where <primary-key> is <value>""
 
 4. Display
 	This is a command to display all elements in a collection.
 	Syntax
-		"display collection where primary key is <value>"
+		"display collection where <primary-key> is <value>"
