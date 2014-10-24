@@ -45,7 +45,8 @@ def store(collection_name,data,commit=False):
 			query.add(BooleanClause(temp,BooleanClause.Occur.MUST))
 		hits=searcher.search(query,MAX_RESULTS).scoreDocs
 		if len(hits) > 0:
-			return 106
+			pass
+			#return 106
 	except:
 		pass 	 
 	
@@ -104,7 +105,7 @@ def  search(collection_name,tofind):
 
 	#initializing return list 
 	return_list=[]
-	check_list=[]
+	#check_list=[]
 	tofind_primary_keyvalue_pairs={}
 	tofind_nonprimary_keyvalue_pairs={}
 
@@ -115,7 +116,169 @@ def  search(collection_name,tofind):
 		else:
 			tofind_nonprimary_keyvalue_pairs[key]=tofind_keyvalue_pairs[key]
 
-	#filtering documents according to primary keys		
+	#filtering documents		
+	if len(tofind_primary_keyvalue_pairs)>0:		
+		query=BooleanQuery()
+		for key in tofind_primary_keyvalue_pairs.keys():
+			temp=QueryParser(Version.LUCENE_CURRENT,key,analyzer).parse(tofind_primary_keyvalue_pairs[key])
+			query.add(BooleanClause(temp,BooleanClause.Occur.MUST))
+		hits=searcher.search(query,MAX_RESULTS).scoreDocs
+		for hit in hits:
+			doc=searcher.doc(hit.doc)
+			if to_be_compressed_map[collection_name]==True:
+				data=snappy.uncompress(doc.get("$DATA$"))
+			else:
+				data=doc.get("$DATA$")
+			#non primary key filtering(without having to load all the primary key filtered values into main memory!)	
+			if len(tofind_nonprimary_keyvalue_pairs)>0:
+				entry=json.loads(data)
+				satisfied=True
+				for key in tofind_nonprimary_keyvalue_pairs.keys():
+					if entry.get(key)!=tofind_nonprimary_keyvalue_pairs[key]:
+						satisfied=False
+						break
+				if satisfied==True:
+					return_list.append(data)
+			else:
+				return_list.append(data)
+			
+	else:
+		for i in range(0,ireader.numDocs()):
+			doc=searcher.doc(i)
+			if to_be_compressed_map[collection_name]==True:
+				data=snappy.uncompress(doc.get("$DATA$"))
+			else:
+				data=doc.get("$DATA$")
+				
+			#non primary key filtering(without having to load all the primary key filtered values into main memory!)	
+			if len(tofind_nonprimary_keyvalue_pairs)>0:
+				entry=json.loads(data)
+				satisfied=True
+				for key in tofind_nonprimary_keyvalue_pairs.keys():
+					if entry.get(key)!=tofind_nonprimary_keyvalue_pairs[key]:
+						satisfied=False
+						break
+				if satisfied==True:
+					return_list.append(data)
+			else:
+				return_list.append(data)
+			
+	ireader.close()
+
+	if len(return_list)==0:
+		return None	
+	else:
+		return return_list 
+
+def update(collection_name,tofind,update,commit=False,add_field_if_not_exists=True):
+	#As of now the update will be implemented as search,modify data in json file,delete and re-write
+	if collection_name!="DEFAULT":
+		INDEX_DIR=collection_name
+	else:
+		INDEX_DIR=INDEX_DIR_DEFAULT
+	try:
+		tofind_keyvalue_pairs=json.loads(tofind)
+	except:
+		return 100	
+	direc=SimpleFSDirectory(File(INDEX_DIR))
+	analyzer=StandardAnalyzer(Version.LUCENE_CURRENT)
+	try:
+		ireader=IndexReader.open(direc)	
+		searcher=IndexSearcher(ireader)
+		#setting writer configurations
+		config=IndexWriterConfig(Version.LUCENE_CURRENT,analyzer)
+		config.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND)
+		writer=IndexWriter(direc,config)
+	except:
+		return 105
+
+	#finding the document to update
+	#Scope for making this more efficient
+	def rewrite(data):
+		data=json.loads(data)
+		toupdate=json.loads(update)
+		primary_key_modified=False
+		for key,value in toupdate.items():
+			if key in primary_keys_map[collection_name]:
+				primary_key_modified=True
+			#if such a key is not present the we either add and update that key into data,or just ignore it!(By default it is set to True!)	
+			if add_field_if_not_exists==False:
+				if key in data.keys():
+					data[key]=value
+			else:		
+				data[key]=value
+		'''---------------------------------Look into this later---------------------------------------------------------
+		if primary_key_modified==True:
+			query=BooleanQuery()
+			for key in primary_keys_map[collection_name]:
+				temp=QueryParser(Version.LUCENE_CURRENT,key,analyzer).parse(data[key])
+				query.add(BooleanClause(temp,BooleanClause.Occur.MUST))
+			writer.deleteDocuments(query)
+			doc=Document()
+			#index files wrt primary key
+			for primary_key in primary_keys_map[collection_name]:
+				try:
+					field=Field(primary_key,data[primary_key],Field.Store.NO,Field.Index.ANALYZED)
+					doc.add(field)
+				except:
+					primary_keys_map.pop(collection_name)
+					return 101
+			#compress data using snappy if compression is on		
+			if to_be_compressed_map[collection_name]==True:
+				data=snappy.compress(json.dumps(data))
+			field=Field("$DATA$",data,Field.Store.YES,Field.Index.ANALYZED)
+			doc.add(field)
+			writer.addDocument(doc)
+		else:
+			doc=Document()
+			#index files wrt primary key
+			for primary_key in primary_keys_map[collection_name]:
+				try:
+					field=Field(primary_key,data[primary_key],Field.Store.NO,Field.Index.ANALYZED)
+					doc.add(field)
+				except:
+					primary_keys_map.pop(collection_name)
+					return 101
+			#compress data using snappy if compression is on		
+			if to_be_compressed_map[collection_name]==True:
+				data=snappy.compress(json.dumps(data))
+			field=Field("$DATA$",data,Field.Store.YES,Field.Index.ANALYZED)
+			doc.add(field)
+			writer.addDocument(doc)
+		-----------------------------------Look into this later----------------------------------------------------
+		'''
+		query=BooleanQuery()
+		for key in primary_keys_map[collection_name]:
+			temp=QueryParser(Version.LUCENE_CURRENT,key,analyzer).parse(data[key])
+			query.add(BooleanClause(temp,BooleanClause.Occur.MUST))
+		writer.deleteDocuments(query)
+		doc=Document()
+		#index files wrt primary key
+		for primary_key in primary_keys_map[collection_name]:
+			try:
+				field=Field(primary_key,data[primary_key],Field.Store.NO,Field.Index.ANALYZED)
+				doc.add(field)
+			except:
+				primary_keys_map.pop(collection_name)
+				return 101
+		#compress data using snappy if compression is on		
+		if to_be_compressed_map[collection_name]==True:
+			data=snappy.compress(json.dumps(data))
+		field=Field("$DATA$",data,Field.Store.YES,Field.Index.ANALYZED)
+		doc.add(field)
+		writer.addDocument(doc)
+
+	tofind_primary_keyvalue_pairs={}
+	tofind_nonprimary_keyvalue_pairs={}
+
+	#separating out primary and non_primary keys
+	for key in tofind_keyvalue_pairs.keys():
+		if key in primary_keys_map[collection_name]:
+			tofind_primary_keyvalue_pairs[key]=tofind_keyvalue_pairs[key]
+		else:
+			tofind_nonprimary_keyvalue_pairs[key]=tofind_keyvalue_pairs[key]
+
+	#filtering documents		
 	if len(tofind_primary_keyvalue_pairs)>0:		
 		query=BooleanQuery()
 		for key in tofind_primary_keyvalue_pairs.keys():
@@ -129,7 +292,19 @@ def  search(collection_name,tofind):
 				data=snappy.uncompress(doc.get("$DATA$"))
 			else:
 				data=doc.get("$DATA")
-			check_list.append(data)
+			#non primary key filtering(without having to load all the primary key filtered values into main memory!)	
+			if len(tofind_nonprimary_keyvalue_pairs)>0:
+				entry=json.loads(data)
+				satisfied=True
+				for key in tofind_nonprimary_keyvalue_pairs.keys():
+					if entry.get(key)!=tofind_nonprimary_keyvalue_pairs[key]:
+						satisfied=False
+						break
+				if satisfied==True:
+					rewrite(data)
+			else:
+				rewrite(data)
+				
 			
 	else:
 		for i in range(0,ireader.numDocs()):
@@ -138,28 +313,24 @@ def  search(collection_name,tofind):
 				data=snappy.uncompress(doc.get("$DATA$"))
 			else:
 				data=doc.get("$DATA")
-			check_list.append(data)
-
-	#filtering documents according to non primary keys ###########find a better method.more efficient
-	if len(tofind_nonprimary_keyvalue_pairs)>0:
-		for record in check_list:
-			entry=json.loads(record)
-			satisfied=True
-			for key in tofind_nonprimary_keyvalue_pairs.keys():
-				if entry.get(key)!=tofind_nonprimary_keyvalue_pairs[key]:
-					satisfied=False
-					break
-			if satisfied==True:
-				return_list.append(record)
-	else:
-		return_list=check_list
-
+			#non primary key filtering(without having to load all the primary key filtered values into main memory!)	
+			if len(tofind_nonprimary_keyvalue_pairs)>0:
+				entry=json.loads(data)
+				satisfied=True
+				for key in tofind_nonprimary_keyvalue_pairs.keys():
+					if entry.get(key)!=tofind_nonprimary_keyvalue_pairs[key]:
+						satisfied=False
+						break
+				if satisfied==True:
+					rewrite(data)
+			else:
+				rewrite(data)
+			
+	
 	ireader.close()
-
-	if len(return_list)==0:
-		return None	
-	else:
-		return return_list 
+	if commit==True:
+			writer.commit()
+	writer.close()
 
 def number(collection_name):
 	if collection_name!="DEFAULT":
@@ -225,7 +396,6 @@ def delete(collection_name,todelete,commit=False):
 	if commit==True:
 		writer.commit()
 	writer.close()
-
 
 def commit(collection_name):
 	if collection_name!="DEFAULT":
@@ -373,6 +543,12 @@ if __name__ == "__main__":
 		elif (choice=="rollback"):
 						collection_name=raw_input("Enter the collection_name to save rollback changes(warning:unsaved commits will be lost!)::")
 						commit(collection_name)
+						continue
+		elif (choice=="update"):
+						collection_name=raw_input("Enter name of the Collection(ENTER \"DEFAULT\" for default table)::")
+						tofind=raw_input("Enter key value pairs to search document to update,in JSON format::")
+						update=raw_input("Enter the key value pairs to be updates(key-to-update:new-value) in JSON format(by default non existant key-to-update will be added to record)::")
+						update(collection_name,tofind,update)
 						continue
 		elif (choice=="exit"):
 						if len(primary_keys_map) > 0:
