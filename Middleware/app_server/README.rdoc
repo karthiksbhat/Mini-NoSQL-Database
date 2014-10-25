@@ -1,4 +1,4 @@
 == README
 
-This a simple Rails application to handle API requests and link the Frontend requests to Backend processing methods.
+This is a simple Rails application to handle API requests and link the Frontend requests to Backend processing methods.
 
