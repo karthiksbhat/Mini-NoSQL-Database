@@ -27,9 +27,18 @@ class ApiController < ApplicationController
 		conditions[0]='{'
 		conditions[conditions.length-1]='}'
 		conditions_json=JSON.parse(conditions)
+		conditions.gsub! '\"','"'
+		conditions.gsub! '"','\"'
+		conditions.gsub! '\",\"','\"\,\"'
+		puts conditions
 
 		# call the necessary method from Backend with collection & conditions hash
 		# get output and return as json to api client
+
+		display_output='python /home/nitin/Desktop/DATABASE-PROJECT/send.py '+collection+' select '+conditions
+		# `#{display_output}`
+		# temp='echo hello'
+		puts `#{display_output}`
 
 		render json: conditions_json
 	end
