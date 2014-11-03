@@ -25,6 +25,7 @@ class ApiController < ApplicationController
 		else
 			display_output='python /home/nitin/Desktop/DATABASE-PROJECT/send.py '+collection+' store '+values
 		end	
+		print display_output
 		return_output = `#{display_output}`
 		response_json = {'response'=>return_output}.to_json
 
@@ -108,6 +109,19 @@ class ApiController < ApplicationController
 
 		display_output='python /home/nitin/Desktop/DATABASE-PROJECT/send.py '+collection+' delete '+values
 		return_output = `#{display_output}`
+		response_json = {'response'=>return_output}.to_json
+
+		render json: response_json
+	end
+
+	def desc
+		#sample api query
+		#/api/desc?collection=<collection_name>
+		collection=params[:collection]
+
+		display_output='python /home/nitin/Desktop/DATABASE-PROJECT/send.py '+collection+' desc'
+		return_output = `#{display_output}`
+		puts return_output
 		response_json = {'response'=>return_output}.to_json
 
 		render json: response_json
