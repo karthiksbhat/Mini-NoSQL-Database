@@ -1,7 +1,7 @@
 import httplib as http
 import sys
 import re
-#conn = http.HTTPConnection('localhost:3000/api')
+conn = http.HTTPConnection('localhost:3000')
 
 #def PrimaryKeyCheck(collection):
 #    if(pk of collection is notNull):
@@ -20,8 +20,6 @@ print "3. modify collection=<collection> <attribute>=<value> <attribute>=<new_va
 print "4. display collection=<collection> <attribute>=<value>"
 print "Note: There are to be no commas in the commands"
 """
-#Taking user input as the query
-#query = raw_input("")
 query = str(sys.argv[1])
 
 insertVar = re.match('^insert .*', query, re.M|re.I)
@@ -29,15 +27,15 @@ deleteVar = re.match('^delete .*', query, re.M|re.I)
 modifyVar = re.match('^modify .*', query, re.M|re.I)
 displayVar = re.match('^display .*', query, re.M|re.I)
 #split by space, to obtain keywords
-word = query.split(" ")
+#word = query.split(" ")
 
-andChar = "&"
-words = [word1+andChar for word1 in word]
+#andChar = "&"
+#words = [word1+andChar for word1 in word]
 
-length = len(words)
-words[length-1]=words[length-1].replace("&","")
-words[0]=words[0].replace("&","")
-print words
+#length = len(words)
+#words[length-1]=words[length-1].replace("&","")
+#ords[0]=words[0].replace("&","")
+#print words
 
 regex = re.compile(r'''
     [\S]+:                # a key (any word followed by a colon)
@@ -48,13 +46,15 @@ regex = re.compile(r'''
     ''', re.VERBOSE)
 
 matches = regex.findall(query)
-for match in matches:
-    print match
-    print "in match"
+#for match in matches:
+    #print match.find(": ")
+    #print match
 
 #basic parser to do the required functions
 #this is now supposed to take the words written, and make them as key:value pairs and store in a json object
 if insertVar:
+    print "in insert"
+    #/api/insert?collection=<collection_name>&values=[attr1:val1,attr2:val2]&primary_keys="key1,key2"&compressed=True|true|false
     regex = re.compile(r'''
     [\S]+:                # a key (any word followed by a colon)
     (?:
@@ -63,12 +63,43 @@ if insertVar:
     )+                    # match multiple values if present
     ''', re.VERBOSE)
 
-    matches = regex.findall(query)
-    for match in matches:
-        print match
+    #conn.request("GET","/api/insert?"+"collection="+collName+"&values=["+keyvalue+"]&primary_keys="+primaryKey+"&compressed="+compressed
 
+    matches = regex.findall(query)
+
+    collection= matches[0].replace("collection: ","collection:").split(":")
+    collName= collection[1].strip()
+    matches.remove(matches[0])
+    keyvalue=""
+    #print collName
+    for match in matches:
+        temp=match.split(": ")
+        if(not(temp[0].strip()=="primary_key" or temp[0].strip()=="compressed")):
+            keyvalue=keyvalue+"\""+temp[0].strip()+"\":\""+temp[1].strip()+"\""
+            if(not(matches.index(match)==len(matches)-1)):
+                keyvalue+=","
+
+    primaryKey=""
+    for match in matches:
+        temp=match.split(": ")
+        if(temp[0].strip()=="primary_key"):
+            primaryKey=primaryKey+"\""+temp[1].strip()+"\""
+
+    compressed="false"
+    for match in matches:
+        temp=match.split(": ")
+        if(temp[0].strip()=="compressed"):
+            compressed=temp[1].strip()
+
+    print keyvalue
+    print primaryKey
+    print compressed
+
+    print "/api/insert?"+"collection="+collName+"&values=["+keyvalue+"]&primary_keys="+primaryKey+"&compressed="+compressed
+    conn.request("GET","/api/insert?"+"collection="+collName+"&values=["+keyvalue+"]&primary_keys="+primaryKey+"&compressed="+compressed
+#####################################################################################################################################
 if deleteVar:
-    collVar = re.match('collection=".*"', query, re.M|re.I)
+    print "in delete"
     regex = re.compile(r'''
     [\S]+:                # a key (any word followed by a colon)
     (?:
@@ -76,13 +107,36 @@ if deleteVar:
         (?!\S+:)\S+       # then a value (any word not followed by a colon)
     )+                    # match multiple values if present
     ''', re.VERBOSE)
-
     matches = regex.findall(query)
+
+    #conn.request("GET","/api/delete?"+"collection="+collName+"&values=["+keyvalue+"]"
+    collection= matches[0].replace("collection: ","collection:").split(":")
+    collName= collection[1].strip()
+    matches.remove(matches[0])
+
+    keyvalue=""
+    #print collName
     for match in matches:
-        print match
+        temp=match.split(": ")
+        if(not(temp[0].strip()=="primary_key" or temp[0].strip()=="compressed")):
+            keyvalue=keyvalue+"\""+temp[0].strip()+"\":\""+temp[1].strip()+"\""
+            if(not(matches.index(match)==len(matches)-1)):
+                keyvalue+=","
+
+    print "/api/delete?"+"collection="+collName+"&values=["+keyvalue+"]"
+    conn.request("GET","/api/delete?"+"collection="+collName+"&values=["+keyvalue+"]"
+#####################################################################################################################################
 
 if modifyVar:
-    collVar = re.match('collection=".*"', query, re.M|re.I)
+    print "in Modify"
+    mod = query.split("NEWVALUES")
+    oldVals = mod[0]
+    newVals = mod[1]
+
+    print oldVals
+    print "old vals done"
+    print newVals
+    print "newVals done"
     regex = re.compile(r'''
     [\S]+:                # a key (any word followed by a colon)
     (?:
@@ -91,12 +145,37 @@ if modifyVar:
     )+                    # match multiple values if present
     ''', re.VERBOSE)
 
-    matches = regex.findall(query)
-    for match in matches:
-        print match
+    matchesOld = regex.findall(oldVals)
+    matchesNew = regex.findall(newVals)
+
+    collection= matchesOld[0].replace("collection: ","collection:").split(":")
+    collName= collection[1].strip()
+    matchesOld.remove(matchesOld[0])
+
+    keyvalueOld=""
+    keyvalueNew=""
+    #conn.request("GET","/api/modify?"+"collection="+collName+"&conditions=["+keyvalueOld+"]&values=["+keyvalueNew+"]"
+    for match in matchesOld:
+        temp=match.split(": ")
+        if(not(temp[0].strip()=="primary_key" or temp[0].strip()=="compressed")):
+            keyvalueOld=keyvalueOld+"\""+temp[0].strip()+"\":\""+temp[1].strip()+"\""
+            if(not(matchesOld.index(match)==len(matchesOld)-1)):
+                keyvalueOld+=","
+
+    for match in matchesNew:
+        temp=match.split(": ")
+        if(not(temp[0].strip()=="primary_key" or temp[0].strip()=="compressed")):
+            keyvalueNew=keyvalueNew+"\""+temp[0].strip()+"\":\""+temp[1].strip()+"\""
+            if(not(matchesNew.index(match)==len(matchesNew)-1)):
+                keyvalueNew+=","
+
+
+    print "/api/modify?"+"collection="+collName+"&conditions=["+keyvalueOld+"]&values=["+keyvalueNew+"]"
+    conn.request("GET","/api/modify?"+"collection="+collName+"&conditions=["+keyvalueOld+"]&values=["+keyvalueNew+"]"
+#####################################################################################################################################
 
 if displayVar:
-    collVar = re.match('collection=".*"', query, re.M|re.I)
+    print "in Display"
     regex = re.compile(r'''
     [\S]+:                # a key (any word followed by a colon)
     (?:
@@ -106,9 +185,19 @@ if displayVar:
     ''', re.VERBOSE)
 
     matches = regex.findall(query)
-    for match in matches:
-        print match
 
+    #conn.request("GET","/api/desc?"+"collection="+collName
+    collection= matches[0].replace("collection: ","collection:").split(":")
+    collName= collection[1].strip()
+    matches.remove(matches[0])
+
+    print "/api/desc?"+"collection="+collName
+    conn.request("GET","/api/desc?"+"collection="+collName
+
+#####################################################################################################################################
+
+
+"""
 if words[0]=="insert":
     #call PrimaryKeyCheck()
     #/insert?id=2&ques=4&name=karthik
@@ -137,3 +226,4 @@ elif words[0]=="modify":
 #test printing
 #print query
 #print words
+"""
