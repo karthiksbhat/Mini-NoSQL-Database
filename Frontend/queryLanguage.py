@@ -4,15 +4,6 @@ import re
 import json
 conn = http.HTTPConnection('10.42.0.1:3000')
 
-#def PrimaryKeyCheck(collection):
-#    if(pk of collection is notNull):
-#        return 1
-#    else:
-#FIX INDENTATION HERE
-#       PrimaryKey=raw_input("Enter the primary key for your collection")
-#       pk[collection]=PrimaryKey
-#       return 1
-#   pass
 """
 print "Welcome to NoSQL-Name Database. You are currently using version 0.1. Here are a few specifications to follow while entering your queries."
 print "1. insert in collection=<collection> <attribute>=<value> <attribute>=<value>  and so on. It may be variable."
@@ -28,6 +19,9 @@ deleteVar = re.match('^delete .*', query, re.M|re.I)
 descVar = re.match('^describe .*', query, re.M|re.I)
 modifyVar = re.match('^modify .*', query, re.M|re.I)
 displayVar = re.match('^display .*', query, re.M|re.I)
+
+#####################################################
+
 #split by space, to obtain keywords
 #word = query.split(" ")
 
@@ -39,6 +33,8 @@ displayVar = re.match('^display .*', query, re.M|re.I)
 #ords[0]=words[0].replace("&","")
 #print words
 
+#####################################################
+
 regex = re.compile(r'''
     [\S]+:                # a key (any word followed by a colon)
     (?:
@@ -48,12 +44,9 @@ regex = re.compile(r'''
     ''', re.VERBOSE)
 
 matches = regex.findall(query)
-#for match in matches:
-    #print match.find(": ")
-    #print match
 
-#basic parser to do the required functions
-#this is now supposed to take the words written, and make them as key:value pairs and store in a json object
+##########################################################################################################
+
 if insertVar:
     print "in insert"
     #/api/insert?collection=<collection_name>&values=[attr1:val1,attr2:val2]&primary_keys="key1,key2"&compressed=True|true|false
@@ -135,7 +128,6 @@ if deleteVar:
     print json.load(a)
 #####################################################################################################################################
 if displayVar:
-    print "abc"
     regex = re.compile(r'''
     [\S]+:                # a key (any word followed by a colon)
     (?:
@@ -265,7 +257,4 @@ elif words[0]=="modify":
     #conn.request("GET","/modify?"+"".join(words[1:]))
 #print words[0]
 
-#test printing
-#print query
-#print words
 """
