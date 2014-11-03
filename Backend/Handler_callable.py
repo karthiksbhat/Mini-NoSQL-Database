@@ -12,12 +12,9 @@ from org.apache.lucene.queryparser.classic import QueryParser
 from org.apache.lucene.document import Document, Field
 from java.io import File
 
-INDEX_DIR_DEFAULT="IndexFiles.index"     #default value
-primary_keys_map={}
-to_be_compressed_map={}
-MAX_RESULTS=1000
 
-def store(collection_name,data,commit=False):
+def store(primary_keys_map,to_be_compressed_input,collection_name,data,commit=False):
+	INDEX_DIR_DEFAULT="IndexFiles.index"
 	if collection_name!="DEFAULT":
 		INDEX_DIR=collection_name
 	else:
@@ -40,7 +37,7 @@ def store(collection_name,data,commit=False):
 		ireader=IndexReader.open(direc)	
 		searcher=IndexSearcher(ireader)
 		query=BooleanQuery()
-		for key in primary_keys_map[INDEX_DIR]:
+		for key in primary_keys_map:
 			temp=QueryParser(Version.LUCENE_CURRENT,key,analyzer).parse(contents[key])
 			query.add(BooleanClause(temp,BooleanClause.Occur.MUST))
 		hits=searcher.search(query,MAX_RESULTS).scoreDocs
@@ -65,15 +62,15 @@ def store(collection_name,data,commit=False):
 	try:
 		doc=Document()
 		#index files wrt primary key
-		for primary_key in primary_keys_map[collection_name]:
+		for primary_key in primary_keys_map:
 			try:
 				field=Field(primary_key,contents[primary_key],Field.Store.NO,Field.Index.ANALYZED)
 				doc.add(field)
 			except:
-				primary_keys_map.pop(collection_name)
+				# primary_keys_map.pop(collection_name)
 				return 101
 		#compress data using snappy if compression is on		
-		if to_be_compressed_map[collection_name]==True:
+		if to_be_compressed_input==True:
 			data=snappy.compress(data)
 		field=Field("$DATA$",data,Field.Store.YES,Field.Index.ANALYZED)
 		doc.add(field)
@@ -85,12 +82,14 @@ def store(collection_name,data,commit=False):
 	except:
 		return 102
 
-def  search(collection_name,tofind):
+def  search(primary_keys_map,to_be_compressed_input,collection_name,tofind,MAX_RESULTS=1000):
+	INDEX_DIR_DEFAULT="IndexFiles.index"
 	if collection_name!="DEFAULT":
 		INDEX_DIR=collection_name
 	else:
 		INDEX_DIR=INDEX_DIR_DEFAULT
 	try:
+		print "********" + tofind
 		tofind_keyvalue_pairs=json.loads(tofind)
 	except:
 		return 100	
@@ -110,7 +109,7 @@ def  search(collection_name,tofind):
 
 	#separating out primary and non_primary keys
 	for key in tofind_keyvalue_pairs.keys():
-		if key in primary_keys_map[collection_name]:
+		if key in primary_keys_map:
 			tofind_primary_keyvalue_pairs[key]=tofind_keyvalue_pairs[key]
 		else:
 			tofind_nonprimary_keyvalue_pairs[key]=tofind_keyvalue_pairs[key]
@@ -124,7 +123,7 @@ def  search(collection_name,tofind):
 		hits=searcher.search(query,MAX_RESULTS).scoreDocs
 		for hit in hits:
 			doc=searcher.doc(hit.doc)
-			if to_be_compressed_map[collection_name]==True:
+			if to_be_compressed_input==True:
 				data=snappy.uncompress(doc.get("$DATA$"))
 			else:
 				data=doc.get("$DATA$")
@@ -144,7 +143,7 @@ def  search(collection_name,tofind):
 	else:
 		for i in range(0,ireader.numDocs()):
 			doc=searcher.doc(i)
-			if to_be_compressed_map[collection_name]==True:
+			if to_be_compressed_input==True:
 				data=snappy.uncompress(str(doc.get("$DATA$")))
 			else:
 				data=doc.get("$DATA$")
@@ -170,7 +169,8 @@ def  search(collection_name,tofind):
 	else:
 		return return_list 
 
-def update(collection_name,tofind,update,commit=False,add_field_if_not_exists=True):
+def update(primary_keys_map,to_be_compressed_input,collection_name,tofind,update,commit=False,add_field_if_not_exists=True):
+	INDEX_DIR_DEFAULT="IndexFiles.index"
 	#As of now the update will be implemented as search,modify data in json file,delete and re-write
 	if collection_name!="DEFAULT":
 		INDEX_DIR=collection_name
@@ -201,7 +201,7 @@ def update(collection_name,tofind,update,commit=False,add_field_if_not_exists=Tr
 
 		#delete the appropriate document
 		query=BooleanQuery()
-		for key in primary_keys_map[collection_name]:
+		for key in primary_keys_map:
 			temp=QueryParser(Version.LUCENE_CURRENT,key,analyzer).parse(data[key])
 			query.add(BooleanClause(temp,BooleanClause.Occur.MUST))
 		
@@ -217,10 +217,11 @@ def update(collection_name,tofind,update,commit=False,add_field_if_not_exists=Tr
 
 		#this deletion statement has been intenstionally added here		
 		#only if the modified data,has primary keys already not existing,will the updating process continue
-		for key in primary_keys_map[INDEX_DIR]:
+		query_search=BooleanQuery()
+		for key in primary_keys_map:
 			temp=QueryParser(Version.LUCENE_CURRENT,key,analyzer).parse(data[key])
-			query.add(BooleanClause(temp,BooleanClause.Occur.MUST))
-		hits=searcher.search(query,MAX_RESULTS).scoreDocs
+			query_search.add(BooleanClause(temp,BooleanClause.Occur.MUST))
+		hits=searcher.search(query_search,MAX_RESULTS).scoreDocs
 		if len(hits) > 0:
 			return 106			
 		writer.deleteDocuments(query)
@@ -228,15 +229,15 @@ def update(collection_name,tofind,update,commit=False,add_field_if_not_exists=Tr
 		#add the newly modified document
 		doc=Document()
 		#index files wrt primary key
-		for primary_key in primary_keys_map[collection_name]:
+		for primary_key in primary_keys_map:
 			try:
 				field=Field(primary_key,data[primary_key],Field.Store.NO,Field.Index.ANALYZED)
 				doc.add(field)
 			except:
-				primary_keys_map.pop(collection_name)
+				# primary_keys_map.pop(collection_name)
 				return 101
 		#compress data using snappy if compression is on		
-		if to_be_compressed_map[collection_name]==True:
+		if to_be_compressed_input==True:
 			data_string=snappy.compress(str(json.dumps(data)))
 		else:
 			data_string=json.dumps(data)	
@@ -249,7 +250,7 @@ def update(collection_name,tofind,update,commit=False,add_field_if_not_exists=Tr
 
 	#separating out primary and non_primary keys
 	for key in tofind_keyvalue_pairs.keys():
-		if key in primary_keys_map[collection_name]:
+		if key in primary_keys_map:
 			tofind_primary_keyvalue_pairs[key]=tofind_keyvalue_pairs[key]
 		else:
 			tofind_nonprimary_keyvalue_pairs[key]=tofind_keyvalue_pairs[key]
@@ -264,7 +265,7 @@ def update(collection_name,tofind,update,commit=False,add_field_if_not_exists=Tr
 		
 		for hit in hits:
 			doc=searcher.doc(hit.doc)
-			if to_be_compressed_map[collection_name]==True:
+			if to_be_compressed_input==True:
 				data=snappy.uncompress(doc.get("$DATA$"))
 			else:
 				data=doc.get("$DATA$")
@@ -293,7 +294,7 @@ def update(collection_name,tofind,update,commit=False,add_field_if_not_exists=Tr
 	else:
 		for i in range(0,ireader.numDocs()):
 			doc=searcher.doc(i)
-			if to_be_compressed_map[collection_name]==True:
+			if to_be_compressed_input==True:
 				data=snappy.uncompress(doc.get("$DATA$"))
 			else:
 				data=doc.get("$DATA$")
@@ -326,6 +327,7 @@ def update(collection_name,tofind,update,commit=False,add_field_if_not_exists=Tr
 	return str(no_of_documents_modified)+" have been modified"
 
 def number(collection_name):
+	INDEX_DIR_DEFAULT="IndexFiles.index"
 	if collection_name!="DEFAULT":
 		INDEX_DIR=collection_name
 	else:
@@ -343,7 +345,8 @@ def number(collection_name):
   	
   	return numdocs
 
-def delete(collection_name,todelete,commit=False):
+def delete(primary_keys_map,collection_name,todelete,commit=False):
+	INDEX_DIR_DEFAULT="IndexFiles.index"
 	if collection_name!="DEFAULT":
 		INDEX_DIR=collection_name
 	else:
@@ -373,7 +376,7 @@ def delete(collection_name,todelete,commit=False):
 
 	#separating out primary and non_primary keys
 	for key in tofind_keyvalue_pairs.keys():
-		if key in primary_keys_map[collection_name]:
+		if key in primary_keys_map:
 			tofind_primary_keyvalue_pairs[key]=tofind_keyvalue_pairs[key]
 		else:
 			tofind_nonprimary_keyvalue_pairs[key]=tofind_keyvalue_pairs[key]
@@ -391,6 +394,7 @@ def delete(collection_name,todelete,commit=False):
 	return 000;
 
 def commit(collection_name):
+	INDEX_DIR_DEFAULT="IndexFiles.index"
 	if collection_name!="DEFAULT":
 		INDEX_DIR=collection_name
 	else:
@@ -408,6 +412,7 @@ def commit(collection_name):
 	writer.close()
 
 def rollback(collection_name):
+	INDEX_DIR_DEFAULT="IndexFiles.index"
 	if collection_name!="DEFAULT":
 		INDEX_DIR=collection_name
 	else:
@@ -424,176 +429,8 @@ def rollback(collection_name):
 	writer.rollback()
 	writer.close()
 
-def desc(collection_name):
-	if collection_name not in primary_keys_map.keys():
-		return 105
-	description={"collection_name":collection_name,"primary_keys":primary_keys_map[collection_name],"compressed":to_be_compressed_map[collection_name],"compressed_type":"snappy","NumberOfRecords":number(collection_name)}
+def desc(primary_keys_map,to_be_compressed,collection_name):
+	#if collection_name not in primary_keys_map.keys():
+	#	return 105
+	description={"collection_name":collection_name,"primary_keys":primary_keys_map,"compressed":to_be_compressed,"compressed_type":"snappy","NumberOfRecords":number(collection_name)}
 	return description
-
-if __name__ == "__main__":
-	lucene.initVM()
-
-	#####load required resources from metafile ##################
-	print "Initialized lucene with version number :",lucene.VERSION
-	if os.path.exists("collectionmetafile.csv"):	
-		
-		f=open("collectionmetafile.csv",'rb')
-		for key, val, compressed in csv.reader(f):
-			primary_keys_map[key]=eval(val)
-			to_be_compressed_map[key]=eval(compressed)
-
-		f.close()
-	
-	###use RabbitMQ to handle multiple requests and call appropriate functions
-	###remove this lame if else conditional execution
-	
-	while(True):
-		choice=raw_input("Enter operation to be performed(store,select,delete,update,number,exit,desc,commit,rollback)")
-		if (choice=="store"):
-						collection_name=raw_input("Enter name of the Collection(ENTER \"DEFAULT\" for default table)::")
-						data=raw_input("Enter the data in json format::")
-						if data is None:
-							print "Enter non Null data!"
-							continue
-						if(collection_name not in primary_keys_map):	
-							#input and store primary-index keys
-							primary_keys_input=raw_input("Enter primary key names separated by \',\'::")
-							primary_keys=primary_keys_input.split(',')
-							primary_keys_map[collection_name]=primary_keys
-							#input compression enabled
-							to_be_compressed=raw_input("Should data be compressed when stored?(Choose True if space is a constraint,False if time is a constraint!)::")
-							if to_be_compressed in ["True","true"]:
-								to_be_compressed_map[collection_name]=True
-							else:
-								to_be_compressed_map[collection_name]=False
-
-						SUCCESS_MESSAGE=store(collection_name,data)
-
-						if SUCCESS_MESSAGE==000:
-							print "added to database successfully!"
-							continue
-						#later add success/failure codes for denoting what failed
-						elif SUCCESS_MESSAGE==100:
-							print "JSON format error!Check input!"
-							continue
-						elif SUCCESS_MESSAGE==101:
-							print "Make sure you gave correct primary_keys!"
-							continue
-						elif SUCCESS_MESSAGE==102:
-							print "Lucene Storage error!"
-							continue
-						elif SUCCESS_MESSAGE==106:
-							print "Record with same primary keys already exists!"
-							continue
-						else:
-							print "error in insertion!"
-							continue
-		elif (choice=="select"):
-						collection_name=raw_input("Enter name of the Collection(ENTER \"DEFAULT\" for default table)::")
-						
-						####################  to be changed as select query  #############################
-						#tofind_keyvalue_pairs={}
-						#for primary_key in primary_keys_map[collection_name]:
-						#	primary_value=raw_input("Enter the primary key value for "+primary_key+":::")
-						#	tofind_keyvalue_pairs[primary_key]=primary_value
-						tofind=raw_input("Enter key value pairs to search against in JSON format::")
-						####################  to be changed as select query  ##############################	
-						
-						SUCCESS_MESSAGE=search(collection_name,tofind)
-
-						if (not isinstance(SUCCESS_MESSAGE,int)):
-							if SUCCESS_MESSAGE is None:
-								print "No records Found"
-							else:	
-								print SUCCESS_MESSAGE
-							continue
-						#later add success/failure codes for denoting what failed
-						elif SUCCESS_MESSAGE==100:
-							print "JSON format error!Check input!"
-							continue
-						elif SUCCESS_MESSAGE==105:
-							print "Invalid collection_name!"	
-						else:
-							print "error in Retrieval!"
-							continue
-		elif (choice=="delete"):
-						collection_name=raw_input("Enter name of the Collection(ENTER \"DEFAULT\" for default table)::")
-						tofind=raw_input("Enter key value pairs to search against in JSON format::")
-						SUCCESS_MESSAGE=delete(collection_name,tofind)
-
-						if SUCCESS_MESSAGE==105:
-							print "Invalid collection_name!"
-							continue
-						elif SUCCESS_MESSAGE==100:
-							print "JSON format error!Check input!"
-							continue
-						elif SUCCESS_MESSAGE==000:
-							print "deleted appropriate records!"
-		elif (choice=="number"):
-						collection_name=raw_input("Enter name of the Collection(ENTER \"DEFAULT\" for default table)::")
-						SUCCESS_MESSAGE=number(collection_name)
-						if SUCCESS_MESSAGE == 105:
-							print "Invalid collection_name!"
-							continue
-						else:	
-							print SUCCESS_MESSAGE
-		elif (choice=="commit"):
-						collection_name=raw_input("Enter the collection_name to save changes to(warning:cannot be rolled back!)::")
-						commit(collection_name)
-						continue
-		elif (choice=="rollback"):
-						collection_name=raw_input("Enter the collection_name to save rollback changes(warning:unsaved commits will be lost!)::")
-						commit(collection_name)
-						continue
-		elif (choice=="update"):
-						collection_name=raw_input("Enter name of the Collection(ENTER \"DEFAULT\" for default table)::")
-						tofind=raw_input("Enter key value pairs to search document to update,in JSON format::")
-						update_pairs=raw_input("Enter the key value pairs to be updates(key-to-update:new-value) in JSON format(by default non existant key-to-update will be added to record)::")
-						SUCCESS_MESSAGE=update(collection_name,tofind,update_pairs)
-
-						if SUCCESS_MESSAGE==100:
-							print "JSON format error!Check input!"
-							continue
-						elif SUCCESS_MESSAGE == 105:
-							print "Invalid collection_name!"
-							continue
-						elif SUCCESS_MESSAGE==106:
-							print "Record with same primary keys already exists!"
-							continue
-						else:
-							print SUCCESS_MESSAGE
-							continue
-		elif (choice=="desc"):
-						collection_name=raw_input("Enter name of the Collection(ENTER \"ALL\" for all tables)::")
-						SUCCESS_MESSAGE=desc(collection_name)
-						if (not isinstance(SUCCESS_MESSAGE,int)):
-							print SUCCESS_MESSAGE
-							continue
-						if SUCCESS_MESSAGE==106:
-							print "Invalid collection_name!"
-							continue	
-		elif (choice=="exit"):
-						if len(primary_keys_map) > 0:
-							f=open("collectionmetafile.csv","wb")
-							w = csv.writer(f)
-							for key, val in primary_keys_map.items():
-								w.writerow([key, val,to_be_compressed_map[key]])
-							f.close()
-						break
-
-
-
-
-
-	
-
-	######################NOTES##############################
-	
-	#2)Set of existing primary keys for the frequently accessed collection
-	#  can be loaded into p-memory just to prevent checking latency always while inserting.
-	#3)Partial data can be cached for frequently accessed records.
-	#2)Data overriten if same primary_key given
-	#4)Storage can be done in BSON instead of JSON
-	#5)Basic understanding is that we retrieve documents based on some primary_keys and process the returned records for further 
-	#  filtering by parsing the JSON/BSON documents stored
-	
