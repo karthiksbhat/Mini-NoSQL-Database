@@ -1,7 +1,8 @@
 import httplib as http
 import sys
 import re
-conn = http.HTTPConnection('localhost:3000')
+import json
+conn = http.HTTPConnection('10.42.0.1:3000')
 
 #def PrimaryKeyCheck(collection):
 #    if(pk of collection is notNull):
@@ -24,6 +25,7 @@ query = str(sys.argv[1])
 
 insertVar = re.match('^insert .*', query, re.M|re.I)
 deleteVar = re.match('^delete .*', query, re.M|re.I)
+descVar = re.match('^describe .*', query, re.M|re.I)
 modifyVar = re.match('^modify .*', query, re.M|re.I)
 displayVar = re.match('^display .*', query, re.M|re.I)
 #split by space, to obtain keywords
@@ -96,7 +98,10 @@ if insertVar:
     print compressed
 
     print "/api/insert?"+"collection="+collName+"&values=["+keyvalue+"]&primary_keys="+primaryKey+"&compressed="+compressed
-    conn.request("GET","/api/insert?"+"collection="+collName+"&values=["+keyvalue+"]&primary_keys="+primaryKey+"&compressed="+compressed
+    conn.request("GET","/api/insert?"+"collection="+collName+"&values=["+keyvalue+"]&primary_keys="+primaryKey+"&compressed="+compressed)
+    a=conn.getresponse()
+    print type(a)
+    print json.load(a)
 #####################################################################################################################################
 if deleteVar:
     print "in delete"
@@ -124,9 +129,41 @@ if deleteVar:
                 keyvalue+=","
 
     print "/api/delete?"+"collection="+collName+"&values=["+keyvalue+"]"
-    conn.request("GET","/api/delete?"+"collection="+collName+"&values=["+keyvalue+"]"
+    conn.request("GET","/api/delete?"+"collection="+collName+"&values=["+keyvalue+"]")
+    a=conn.getresponse()
+    print type(a)
+    print json.load(a)
 #####################################################################################################################################
+if displayVar:
+    print "abc"
+    regex = re.compile(r'''
+    [\S]+:                # a key (any word followed by a colon)
+    (?:
+    \s                    # then a space in between
+        (?!\S+:)\S+       # then a value (any word not followed by a colon)
+    )+                    # match multiple values if present
+    ''', re.VERBOSE)
+    matches = regex.findall(query)
 
+    #conn.request("GET","/api/delete?"+"collection="+collName+"&values=["+keyvalue+"]"
+    collection= matches[0].replace("collection: ","collection:").split(":")
+    collName= collection[1].strip()
+    matches.remove(matches[0])
+
+    keyvalue=""
+    #print collName
+    for match in matches:
+        temp=match.split(": ")
+        if(not(temp[0].strip()=="primary_key" or temp[0].strip()=="compressed")):
+            keyvalue=keyvalue+"\""+temp[0].strip()+"\":\""+temp[1].strip()+"\""
+            if(not(matches.index(match)==len(matches)-1)):
+                keyvalue+=","
+
+    conn.request("GET","/api/display?"+"collection="+collName+"&values=["+keyvalue+"]")
+    a=conn.getresponse()
+    print type(a)
+    print json.load(a)
+#####################################################################################################################################
 if modifyVar:
     print "in Modify"
     mod = query.split("NEWVALUES")
@@ -171,10 +208,13 @@ if modifyVar:
 
 
     print "/api/modify?"+"collection="+collName+"&conditions=["+keyvalueOld+"]&values=["+keyvalueNew+"]"
-    conn.request("GET","/api/modify?"+"collection="+collName+"&conditions=["+keyvalueOld+"]&values=["+keyvalueNew+"]"
+    conn.request("GET","/api/modify?"+"collection="+collName+"&conditions=["+keyvalueOld+"]&values=["+keyvalueNew+"]")
+    a=conn.getresponse()
+    print type(a)
+    print json.load(a)
 #####################################################################################################################################
 
-if displayVar:
+if descVar:
     print "in Display"
     regex = re.compile(r'''
     [\S]+:                # a key (any word followed by a colon)
@@ -192,8 +232,10 @@ if displayVar:
     matches.remove(matches[0])
 
     print "/api/desc?"+"collection="+collName
-    conn.request("GET","/api/desc?"+"collection="+collName
-
+    conn.request("GET","/api/desc?"+"collection="+collName)
+    a=conn.getresponse()
+    print type(a)
+    print json.load(a)
 #####################################################################################################################################
 
 
