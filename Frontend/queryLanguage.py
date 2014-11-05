@@ -70,7 +70,7 @@ if insertVar:
     #print collName
     for match in matches:
         temp=match.split(": ")
-        if(not(temp[0].strip()=="primary_key" or temp[0].strip()=="compressed")):
+        if(not(temp[0].strip()=="primary_keys" or temp[0].strip()=="compressed")):
             keyvalue=keyvalue+"\""+temp[0].strip()+"\":\""+temp[1].strip()+"\""
             if(not(matches.index(match)==len(matches)-1)):
                 keyvalue+=","
@@ -78,7 +78,7 @@ if insertVar:
     primaryKey=""
     for match in matches:
         temp=match.split(": ")
-        if(temp[0].strip()=="primary_key"):
+        if(temp[0].strip()=="primary_keys"):
             primaryKey=primaryKey+"\""+temp[1].strip()+"\""
 
     compressed="false"
@@ -121,7 +121,7 @@ if deleteVar:
     #print collName
     for match in matches:
         temp=match.split(": ")
-        if(not(temp[0].strip()=="primary_key" or temp[0].strip()=="compressed")):
+        if(not(temp[0].strip()=="primary_keys" or temp[0].strip()=="compressed")):
             keyvalue=keyvalue+"\""+temp[0].strip()+"\":\""+temp[1].strip()+"\""
             if(not(matches.index(match)==len(matches)-1)):
                 keyvalue+=","
@@ -154,7 +154,7 @@ if displayVar:
     #print collName
     for match in matches:
         temp=match.split(": ")
-        if(not(temp[0].strip()=="primary_key" or temp[0].strip()=="compressed")):
+        if(not(temp[0].strip()=="primary_keys" or temp[0].strip()=="compressed")):
             keyvalue=keyvalue+"\""+temp[0].strip()+"\":\""+temp[1].strip()+"\""
             if(not(matches.index(match)==len(matches)-1)):
                 keyvalue+=","
@@ -198,14 +198,14 @@ if modifyVar:
     #conn.request("GET","/api/modify?"+"collection="+collName+"&conditions=["+keyvalueOld+"]&values=["+keyvalueNew+"]"
     for match in matchesOld:
         temp=match.split(": ")
-        if(not(temp[0].strip()=="primary_key" or temp[0].strip()=="compressed")):
+        if(not(temp[0].strip()=="primary_keys" or temp[0].strip()=="compressed")):
             keyvalueOld=keyvalueOld+"\""+temp[0].strip()+"\":\""+temp[1].strip()+"\""
             if(not(matchesOld.index(match)==len(matchesOld)-1)):
                 keyvalueOld+=","
 
     for match in matchesNew:
         temp=match.split(": ")
-        if(not(temp[0].strip()=="primary_key" or temp[0].strip()=="compressed")):
+        if(not(temp[0].strip()=="primary_keys" or temp[0].strip()=="compressed")):
             keyvalueNew=keyvalueNew+"\""+temp[0].strip()+"\":\""+temp[1].strip()+"\""
             if(not(matchesNew.index(match)==len(matchesNew)-1)):
                 keyvalueNew+=","
