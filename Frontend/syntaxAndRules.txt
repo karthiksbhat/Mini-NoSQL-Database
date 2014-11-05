@@ -4,22 +4,26 @@ Syntax
 1. Insert
 	This is a command to insert an entry to a collection.
 	Syntax
-		insert in collection: <collection-name> primary_keys:<value>,<value>,<value>* compressed: true|false <attributes>: <values>
+		insert in collection: <collection-name> primary_keys:<value>,<value>,<value>(*) compressed: true|false <attributes>: <values>
 
 2. Modify
 	This is a command to modify an entered entry to the collection.
 	Syntax
-		modify collection: <collection-name> <attribute>: <value> <attribute>: <value> NEWVALUES <attribute>: <new-value> <attribute>: <new-value>
+		modify collection: <collection-name> <attribute>: <value> <attribute>: <value>(*) NEWVALUES <attribute>: <new-value> <attribute>: <new-value>(*)
 
 3. Delete
 	This is a command to delete an entry in the collection.
 	Syntax
-		delete from collection: <collection-name> <attribute>: <value> <attribute>: <value>*
+		delete from collection: <collection-name> <attribute>: <value> <attribute>: <value>(*)
 
 4. Display
 	This is a command to display all elements in a collection.
 	Syntax
-		display collection: <collection-name> <attribute>: <value> <attribute>: <value>*
+		display collection: <collection-name> <attribute>: <value> <attribute>: <value>(*)
+
+	Suppose an attribute is not mentioned.
+	Syntax
+		display collection: <collection-name>
 
 5. Describe
 	This is a command to describe the collection specified.
