@@ -11,7 +11,12 @@ Rails.application.routes.draw do
     get 'api/display' => 'api#display'
     get 'api/modify' => 'api#modify'
     get 'api/delete' => 'api#delete' 
-
+    get 'api/desc' => 'api#desc' 
+    post 'api/desc' => 'api#desc'
+    post 'api/display' => 'api#display'
+    post 'api/insert' => 'api#insert' 
+    post 'api/modify' => 'api#modify'
+    post 'api/delete' => 'api#delete'
   # Example of named route that can be invoked with purchase_url(id: product.id)
   #   get 'products/:id/purchase' => 'catalog#purchase', as: :purchase
 

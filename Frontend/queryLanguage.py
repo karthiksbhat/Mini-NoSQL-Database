@@ -1,8 +1,9 @@
 import httplib as http
+import urllib
 import sys
 import re
 import json
-conn = http.HTTPConnection('10.42.0.1:3000')
+conn = http.HTTPConnection('localhost:3000')
 
 """
 print "Welcome to NoSQL-Name Database. You are currently using version 0.1. Here are a few specifications to follow while entering your queries."
@@ -90,8 +91,12 @@ if insertVar:
     print primaryKey
     print compressed
 
-    print "/api/insert?"+"collection="+collName+"&values=["+keyvalue+"]&primary_keys="+primaryKey+"&compressed="+compressed
-    conn.request("GET","/api/insert?"+"collection="+collName+"&values=["+keyvalue+"]&primary_keys="+primaryKey+"&compressed="+compressed)
+    params = urllib.urlencode({'collection': collName,'values':"["+keyvalue+"]",'primary_keys':'"'+primaryKey+'"','compressed':compressed})
+    headers = {"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
+    conn.request("POST","/api/insert", params, headers)
+
+    # print "/api/insert?"+"collection="+collName+"&values=["+keyvalue+"]&primary_keys="+primaryKey+"&compressed="+compressed
+    # conn.request("GET","/api/insert?"+"collection="+collName+"&values=["+keyvalue+"]&primary_keys="+primaryKey+"&compressed="+compressed)
     a=conn.getresponse()
     print type(a)
     print json.load(a)
@@ -121,8 +126,11 @@ if deleteVar:
             if(not(matches.index(match)==len(matches)-1)):
                 keyvalue+=","
 
-    print "/api/delete?"+"collection="+collName+"&values=["+keyvalue+"]"
-    conn.request("GET","/api/delete?"+"collection="+collName+"&values=["+keyvalue+"]")
+    params = urllib.urlencode({'collection': collName,'values':"["+keyvalue+"]"})
+    headers = {"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
+    conn.request("POST","/api/delete", params, headers)
+    #print "/api/delete?"+"collection="+collName+"&values=["+keyvalue+"]"
+    #conn.request("GET","/api/delete?"+"collection="+collName+"&values=["+keyvalue+"]")
     a=conn.getresponse()
     print type(a)
     print json.load(a)
@@ -151,7 +159,11 @@ if displayVar:
             if(not(matches.index(match)==len(matches)-1)):
                 keyvalue+=","
 
-    conn.request("GET","/api/display?"+"collection="+collName+"&values=["+keyvalue+"]")
+    params = urllib.urlencode({'collection': collName,'values':"["+keyvalue+"]"})
+    headers = {"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
+    conn.request("POST","/api/display", params, headers)
+
+    #conn.request("GET","/api/display?"+"collection="+collName+"&values=["+keyvalue+"]")
     a=conn.getresponse()
     print type(a)
     print json.load(a)
@@ -199,8 +211,11 @@ if modifyVar:
                 keyvalueNew+=","
 
 
-    print "/api/modify?"+"collection="+collName+"&conditions=["+keyvalueOld+"]&values=["+keyvalueNew+"]"
-    conn.request("GET","/api/modify?"+"collection="+collName+"&conditions=["+keyvalueOld+"]&values=["+keyvalueNew+"]")
+    params = urllib.urlencode({'collection': collName,'conditions':"["+keyvalueOld+"]",'values':"["+keyvalueNew+"]"})
+    headers = {"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
+    conn.request("POST","/api/modify", params, headers)
+    #print "/api/modify?"+"collection="+collName+"&conditions=["+keyvalueOld+"]&values=["+keyvalueNew+"]"
+    #conn.request("GET","/api/modify?"+"collection="+collName+"&conditions=["+keyvalueOld+"]&values=["+keyvalueNew+"]")
     a=conn.getresponse()
     print type(a)
     print json.load(a)
@@ -223,8 +238,12 @@ if descVar:
     collName= collection[1].strip()
     matches.remove(matches[0])
 
-    print "/api/desc?"+"collection="+collName
-    conn.request("GET","/api/desc?"+"collection="+collName)
+    params = urllib.urlencode({'collection': collName})
+    headers = {"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
+    conn.request("POST","/api/desc", params, headers)
+
+    # print "/api/desc?"+"collection="+collName
+    # conn.request("GET","/api/desc?"+"collection="+collName)
     a=conn.getresponse()
     print type(a)
     print json.load(a)
