@@ -3,7 +3,8 @@ import urllib
 import sys
 import re
 import json
-conn = http.HTTPConnection('localhost:3000')
+import unicodedata
+conn = http.HTTPConnection('10.42.0.1:3000')
 
 """
 print "Welcome to NoSQL-Name Database. You are currently using version 0.1. Here are a few specifications to follow while entering your queries."
@@ -13,6 +14,7 @@ print "3. modify collection=<collection> <attribute>=<value> <attribute>=<new_va
 print "4. display collection=<collection> <attribute>=<value>"
 print "Note: There are to be no commas in the commands"
 """
+
 query = str(sys.argv[1])
 
 insertVar = re.match('^insert .*', query, re.M|re.I)
@@ -20,7 +22,7 @@ deleteVar = re.match('^delete .*', query, re.M|re.I)
 descVar = re.match('^describe .*', query, re.M|re.I)
 modifyVar = re.match('^modify .*', query, re.M|re.I)
 displayVar = re.match('^display .*', query, re.M|re.I)
-
+dropVar = re.match('^drop .*', query, re.M|re.I)
 #####################################################
 
 #split by space, to obtain keywords
@@ -49,7 +51,7 @@ matches = regex.findall(query)
 ##########################################################################################################
 
 if insertVar:
-    print "in insert"
+
     #/api/insert?collection=<collection_name>&values=[attr1:val1,attr2:val2]&primary_keys="key1,key2"&compressed=True|true|false
     regex = re.compile(r'''
     [\S]+:                # a key (any word followed by a colon)
@@ -87,9 +89,9 @@ if insertVar:
         if(temp[0].strip()=="compressed"):
             compressed=temp[1].strip()
 
-    print keyvalue
-    print primaryKey
-    print compressed
+    # print keyvalue
+    # print primaryKey
+    # print compressed
 
     params = urllib.urlencode({'collection': collName,'values':"["+keyvalue+"]",'primary_keys':'"'+primaryKey+'"','compressed':compressed})
     headers = {"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
@@ -98,11 +100,20 @@ if insertVar:
     # print "/api/insert?"+"collection="+collName+"&values=["+keyvalue+"]&primary_keys="+primaryKey+"&compressed="+compressed
     # conn.request("GET","/api/insert?"+"collection="+collName+"&values=["+keyvalue+"]&primary_keys="+primaryKey+"&compressed="+compressed)
     a=conn.getresponse()
-    print type(a)
-    print json.load(a)
+    
+    var1= json.load(a)
+    var2=unicodedata.normalize('NFKD', var1['response']).encode('ascii','ignore')
+    eval(var2)
+    list1= eval(var2.replace("u\'{", "\'{"))
+
+    for a in list1:
+        b=json.loads(a)
+        for c in b:
+            print c+"->"+b[c]
+        print "\n"
 #####################################################################################################################################
 if deleteVar:
-    print "in delete"
+
     regex = re.compile(r'''
     [\S]+:                # a key (any word followed by a colon)
     (?:
@@ -132,8 +143,18 @@ if deleteVar:
     #print "/api/delete?"+"collection="+collName+"&values=["+keyvalue+"]"
     #conn.request("GET","/api/delete?"+"collection="+collName+"&values=["+keyvalue+"]")
     a=conn.getresponse()
-    print type(a)
-    print json.load(a)
+    var1= json.load(a)
+    var2=unicodedata.normalize('NFKD', var1['response']).encode('ascii','ignore')
+    eval(var2)
+    list1= eval(var2.replace("u\'{", "\'{"))
+
+    for a in list1:
+        b=json.loads(a)
+        for c in b:
+            print c+"->"+b[c]
+        print "\n"
+
+
 #####################################################################################################################################
 if displayVar:
     regex = re.compile(r'''
@@ -165,19 +186,30 @@ if displayVar:
 
     #conn.request("GET","/api/display?"+"collection="+collName+"&values=["+keyvalue+"]")
     a=conn.getresponse()
-    print type(a)
-    print json.load(a)
+
+    var1= json.load(a)
+    var2=unicodedata.normalize('NFKD', var1['response']).encode('ascii','ignore')
+    eval(var2)
+    list1= eval(var2.replace("u\'{", "\'{"))
+
+    for a in list1:
+        b=json.loads(a)
+        for c in b:
+            print c+"->"+b[c]
+        print "\n"
+
+
 #####################################################################################################################################
 if modifyVar:
-    print "in Modify"
+
     mod = query.split("NEWVALUES")
     oldVals = mod[0]
     newVals = mod[1]
 
-    print oldVals
-    print "old vals done"
-    print newVals
-    print "newVals done"
+    # print oldVals
+    # print "old vals done"
+    # print newVals
+    # print "newVals done"
     regex = re.compile(r'''
     [\S]+:                # a key (any word followed by a colon)
     (?:
@@ -217,12 +249,21 @@ if modifyVar:
     #print "/api/modify?"+"collection="+collName+"&conditions=["+keyvalueOld+"]&values=["+keyvalueNew+"]"
     #conn.request("GET","/api/modify?"+"collection="+collName+"&conditions=["+keyvalueOld+"]&values=["+keyvalueNew+"]")
     a=conn.getresponse()
-    print type(a)
-    print json.load(a)
+    var1= json.load(a)
+    var2=unicodedata.normalize('NFKD', var1['response']).encode('ascii','ignore')
+    eval(var2)
+    list1= eval(var2.replace("u\'{", "\'{"))
+
+    for a in list1:
+        b=json.loads(a)
+        for c in b:
+            print c+"->"+b[c]
+        print "\n"
+
+
 #####################################################################################################################################
 
 if descVar:
-    print "in Display"
     regex = re.compile(r'''
     [\S]+:                # a key (any word followed by a colon)
     (?:
@@ -245,9 +286,59 @@ if descVar:
     # print "/api/desc?"+"collection="+collName
     # conn.request("GET","/api/desc?"+"collection="+collName)
     a=conn.getresponse()
-    print type(a)
-    print json.load(a)
+    var1= json.load(a)
+    var2=var1['response']
+    # var2=unicodedata.normalize('NFKD', var1['response']).encode('ascii','ignore')
+    eval(var2)
+    list1= eval(var2.replace("u\'{", "\'{"))
+
+    for a in list1:
+        b=json.loads(a)
+        # print b
+        for c in b:
+            # print type(c)
+            # print type(b)
+            print c+"->"+json.dumps(b[c])
+        print "\n"
+
 #####################################################################################################################################
+
+if dropVar:
+    regex = re.compile(r'''
+    [\S]+:                # a key (any word followed by a colon)
+    (?:
+    \s                    # then a space in between
+        (?!\S+:)\S+       # then a value (any word not followed by a colon)
+    )+                    # match multiple values if present
+    ''', re.VERBOSE)
+
+    matches = regex.findall(query)
+
+    #conn.request("GET","/api/desc?"+"collection="+collName
+    collection= matches[0].replace("collection: ","collection:").split(":")
+    collName= collection[1].strip()
+    matches.remove(matches[0])
+
+    params = urllib.urlencode({'collection': collName})
+    headers = {"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
+    conn.request("POST","/api/drop", params, headers)
+
+    # print "/api/desc?"+"collection="+collName
+    # conn.request("GET","/api/desc?"+"collection="+collName)
+    a=conn.getresponse()
+    var1= json.load(a)
+    var2=unicodedata.normalize('NFKD', var1['response']).encode('ascii','ignore')
+    eval(var2)
+    list1= eval(var2.replace("u\'{", "\'{"))
+
+    for a in list1:
+        b=json.loads(a)
+        for c in b:
+            print c+"->"+b[c]
+        print "\n"
+
+#####################################################################################################################################
+
 
 
 """

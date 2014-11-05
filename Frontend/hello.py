@@ -1,11 +1,13 @@
 from Tkinter import *
 import ttk
 import os
-
+import tkMessageBox
 def process_query(*args):
 	value = query.get()
-	print value
-	os.system('python queryLanguage.py "'+value+'"')
+	# print value
+	output=os.popen('python queryLanguage.py "'+value+'"').read()
+	tkMessageBox.showinfo("answer",output)
+
 	#file = open("input_file.txt", "w")
 	#file.write(value)
 	#file.close()
