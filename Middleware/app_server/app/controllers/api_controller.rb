@@ -1,4 +1,5 @@
 class ApiController < ApplicationController
+	protect_from_forgery with: :null_session, if: Proc.new { |c| c.request.format == 'application/json' || c.request.format == 'application/x-www-form-urlencoded'}
 	def insert
 		#sample api query
 		#/api/insert?collection=<collection_name>&values=[attr1:val1,attr2:val2]&primary_keys="key1,key2"&compressed=True|true|false
@@ -120,6 +121,7 @@ class ApiController < ApplicationController
 		collection=params[:collection]
 
 		display_output='python /home/nitin/Desktop/DATABASE-PROJECT/send.py '+collection+' desc'
+		puts display_output
 		return_output = `#{display_output}`
 		puts return_output
 		response_json = {'response'=>return_output}.to_json
