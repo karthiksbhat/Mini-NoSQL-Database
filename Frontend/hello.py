@@ -22,12 +22,13 @@ query = StringVar()
 meters = StringVar()
 
 query_entry = ttk.Entry(mainframe, width=100, textvariable=query)
-query_entry.grid(column=2, row=1, sticky=(W, E))
+query_entry.grid(column=2, row=2, sticky=(W, E))
 
-ttk.Label(mainframe, textvariable=meters).grid(column=2, row=2, sticky=(W, E))
+ttk.Label(mainframe, textvariable=meters).grid(column=2, row=3, sticky=(W, E))
+ttk.Label(mainframe, text="The syntax rules are going to be here.").grid(column=2, row=1)
 ttk.Button(mainframe, text="Process the Query", command=process_query).grid(column=3, row=3, sticky=W)
 
-ttk.Label(mainframe, text="Enter Query here").grid(column=1, row=1, sticky=N)
+ttk.Label(mainframe, text="Enter Query here").grid(column=1, row=2, sticky=N)
 
 ##for child in mainframe.winfo_children(): child.grid_configure(padx=5, pady=5)
 
