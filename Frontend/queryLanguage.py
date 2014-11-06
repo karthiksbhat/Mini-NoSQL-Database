@@ -35,7 +35,9 @@ dropVar = re.match('^drop .*', query, re.M|re.I)
 #words[length-1]=words[length-1].replace("&","")
 #ords[0]=words[0].replace("&","")
 #print words
-
+#print query
+query = re.sub(':[ ]?',': ',query)
+#print query
 #####################################################
 
 regex = re.compile(r'''
