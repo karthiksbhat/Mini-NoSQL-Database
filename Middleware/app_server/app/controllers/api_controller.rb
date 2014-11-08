@@ -129,4 +129,18 @@ class ApiController < ApplicationController
 		render json: response_json
 	end
 
+	def drop
+		#sample api query
+		#/api/drop?collection=<collection_name>
+		collection=params[:collection]
+
+		display_output='python /home/nitin/Desktop/DATABASE-PROJECT/send.py '+collection+' drop'
+		puts display_output
+		return_output = `#{display_output}`
+		puts return_output
+		response_json = {'response'=>return_output}.to_json
+
+		render json: response_json
+	end
+
 end
