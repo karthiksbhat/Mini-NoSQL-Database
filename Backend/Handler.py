@@ -3,6 +3,9 @@ import simplejson as json
 import os
 import csv
 import snappy          #compression technology
+import shutil
+import base64
+from org.apache.lucene.codecs import Codec
 from org.apache.lucene.store import FSDirectory, SimpleFSDirectory
 from org.apache.lucene.analysis.standard import StandardAnalyzer
 from org.apache.lucene.index import IndexWriter, IndexWriterConfig, IndexReader
@@ -67,14 +70,20 @@ def store(collection_name,data,commit=False):
 		#index files wrt primary key
 		for primary_key in primary_keys_map[collection_name]:
 			try:
-				field=Field(primary_key,contents[primary_key],Field.Store.NO,Field.Index.ANALYZED)
+				field=Field(primary_key,contents[primary_key],Field.Store.NO,Field.Index.NOT_ANALYZED)
 				doc.add(field)
 			except:
 				primary_keys_map.pop(collection_name)
 				return 101
 		#compress data using snappy if compression is on		
 		if to_be_compressed_map[collection_name]==True:
-			data=snappy.compress(data)
+			# print "here"
+			#data=data.encode('utf-8')
+			data=base64.b64encode(snappy.compress(data))
+			# print data
+		else:
+			data=base64.b64encode(data)
+
 		field=Field("$DATA$",data,Field.Store.YES,Field.Index.ANALYZED)
 		doc.add(field)
 		writer.addDocument(doc)
@@ -125,9 +134,11 @@ def  search(collection_name,tofind):
 		for hit in hits:
 			doc=searcher.doc(hit.doc)
 			if to_be_compressed_map[collection_name]==True:
-				data=snappy.uncompress(doc.get("$DATA$"))
+				temp=doc.get("$DATA$")
+				data=snappy.uncompress(base64.b64decode(temp))
 			else:
-				data=doc.get("$DATA$")
+				temp=doc.get("$DATA$")
+				data=base64.b64decode(temp)
 			#non primary key filtering(without having to load all the primary key filtered values into main memory!)	
 			if len(tofind_nonprimary_keyvalue_pairs)>0:
 				entry=json.loads(data)
@@ -145,9 +156,11 @@ def  search(collection_name,tofind):
 		for i in range(0,ireader.numDocs()):
 			doc=searcher.doc(i)
 			if to_be_compressed_map[collection_name]==True:
-				data=snappy.uncompress(str(doc.get("$DATA$")))
+				temp=doc.get("$DATA$")
+				data=snappy.uncompress(base64.b64decode(temp))
 			else:
-				data=doc.get("$DATA$")
+				temp=doc.get("$DATA$")
+				data=base64.b64decode(temp)
 
 				
 			#non primary key filtering(without having to load all the primary key filtered values into main memory!)	
@@ -198,15 +211,14 @@ def update(collection_name,tofind,update,commit=False,add_field_if_not_exists=Tr
 		data=json.loads(data_string)
 		toupdate=json.loads(update)
 		#primary_key_modified=False
-		print data
-		print toupdate
+		
 		#delete the appropriate document
 		query=BooleanQuery()
 		for key in primary_keys_map[collection_name]:
 			temp=QueryParser(Version.LUCENE_CURRENT,key,analyzer).parse(data[key])
 			query.add(BooleanClause(temp,BooleanClause.Occur.MUST))
 		
-		print query	
+		#print query	
 		#modify the values
 		for key,value in toupdate.items():
 			#if such a key is not present the we either add and update that key into data,or just ignore it!(By default it is set to True!)	
@@ -218,13 +230,19 @@ def update(collection_name,tofind,update,commit=False,add_field_if_not_exists=Tr
 
 		#this deletion statement has been intenstionally added here		
 		#only if the modified data,has primary keys already not existing,will the updating process continue
-		query_search=BooleanQuery()
-		for key in primary_keys_map[INDEX_DIR]:
-			temp=QueryParser(Version.LUCENE_CURRENT,key,analyzer).parse(data[key])
-			query_search.add(BooleanClause(temp,BooleanClause.Occur.MUST))
-		hits=searcher.search(query_search,MAX_RESULTS).scoreDocs
-		if len(hits) > 0:
-			return 106			
+		primary_key_update=False
+		for key in toupdate.keys():
+			if key in primary_keys_map[INDEX_DIR]:
+				primary_key_update=True
+				break
+		if primary_key_update == True:		
+			query_search=BooleanQuery()
+			for key in primary_keys_map[INDEX_DIR]:
+				temp=QueryParser(Version.LUCENE_CURRENT,key,analyzer).parse(data[key])
+				query_search.add(BooleanClause(temp,BooleanClause.Occur.MUST))
+			hits=searcher.search(query_search,MAX_RESULTS).scoreDocs
+			if len(hits) > 0:
+				return 106			
 		writer.deleteDocuments(query)
 		
 		#add the newly modified document
@@ -232,16 +250,19 @@ def update(collection_name,tofind,update,commit=False,add_field_if_not_exists=Tr
 		#index files wrt primary key
 		for primary_key in primary_keys_map[collection_name]:
 			try:
-				field=Field(primary_key,data[primary_key],Field.Store.NO,Field.Index.ANALYZED)
+				field=Field(primary_key,data[primary_key],Field.Store.NO,Field.Index.NOT_ANALYZED)
 				doc.add(field)
 			except:
 				primary_keys_map.pop(collection_name)
 				return 101
 		#compress data using snappy if compression is on		
 		if to_be_compressed_map[collection_name]==True:
-			data_string=snappy.compress(str(json.dumps(data)))
+			temp=json.dumps(data)
+			data_string=base64.b64encode(snappy.compress(temp))
 		else:
-			data_string=json.dumps(data)	
+			temp=json.dumps(data)
+			data_string=base64.b64encode(temp)
+
 		field=Field("$DATA$",data_string,Field.Store.YES,Field.Index.ANALYZED)
 		doc.add(field)
 		writer.addDocument(doc)
@@ -267,9 +288,11 @@ def update(collection_name,tofind,update,commit=False,add_field_if_not_exists=Tr
 		for hit in hits:
 			doc=searcher.doc(hit.doc)
 			if to_be_compressed_map[collection_name]==True:
-				data=snappy.uncompress(doc.get("$DATA$"))
+				temp=doc.get("$DATA$")
+				data=snappy.uncompress(base64.b64decode(temp))
 			else:
-				data=doc.get("$DATA$")
+				temp=doc.get("$DATA$")
+				data=base64.b64decode(temp)
 			#non primary key filtering(without having to load all the primary key filtered values into main memory!)	
 			if len(tofind_nonprimary_keyvalue_pairs)>0:
 				entry=json.loads(data)
@@ -294,9 +317,12 @@ def update(collection_name,tofind,update,commit=False,add_field_if_not_exists=Tr
 		for i in range(0,ireader.numDocs()):
 			doc=searcher.doc(i)
 			if to_be_compressed_map[collection_name]==True:
-				data=snappy.uncompress(doc.get("$DATA$"))
+				temp=doc.get("$DATA$")
+				data=snappy.uncompress(base64.b64decode(temp))
 			else:
-				data=doc.get("$DATA$")
+				temp=doc.get("$DATA$")
+				data=base64.b64decode(temp)
+
 			#non primary key filtering(without having to load all the primary key filtered values into main memory!)	
 			if len(tofind_nonprimary_keyvalue_pairs)>0:
 				entry=json.loads(data)
@@ -443,6 +469,8 @@ if __name__ == "__main__":
 			to_be_compressed_map[key]=eval(compressed)
 
 		f.close()
+
+
 	
 	###use RabbitMQ to handle multiple requests and call appropriate functions
 	###remove this lame if else conditional execution

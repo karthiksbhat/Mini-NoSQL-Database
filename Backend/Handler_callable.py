@@ -3,6 +3,7 @@ import simplejson as json
 import os
 import csv
 import snappy          #compression technology
+import base64
 from org.apache.lucene.store import FSDirectory, SimpleFSDirectory
 from org.apache.lucene.analysis.standard import StandardAnalyzer
 from org.apache.lucene.index import IndexWriter, IndexWriterConfig, IndexReader
@@ -71,7 +72,10 @@ def store(primary_keys_map,to_be_compressed_input,collection_name,data,commit=Fa
 				return 101
 		#compress data using snappy if compression is on		
 		if to_be_compressed_input==True:
-			data=snappy.compress(data)
+			data=base64.b64encode(snappy.compress(data))
+		else:
+			data=base64.b64encode(data)
+
 		field=Field("$DATA$",data,Field.Store.YES,Field.Index.ANALYZED)
 		doc.add(field)
 		writer.addDocument(doc)
@@ -123,9 +127,11 @@ def  search(primary_keys_map,to_be_compressed_input,collection_name,tofind,MAX_R
 		for hit in hits:
 			doc=searcher.doc(hit.doc)
 			if to_be_compressed_input==True:
-				data=snappy.uncompress(doc.get("$DATA$"))
+				temp=doc.get("$DATA$")
+				data=snappy.uncompress(base64.b64decode(temp))
 			else:
-				data=doc.get("$DATA$")
+				temp=doc.get("$DATA$")
+				data=base64.b64decode(temp)
 			#non primary key filtering(without having to load all the primary key filtered values into main memory!)	
 			if len(tofind_nonprimary_keyvalue_pairs)>0:
 				entry=json.loads(data)
@@ -143,9 +149,11 @@ def  search(primary_keys_map,to_be_compressed_input,collection_name,tofind,MAX_R
 		for i in range(0,ireader.numDocs()):
 			doc=searcher.doc(i)
 			if to_be_compressed_input==True:
-				data=snappy.uncompress(str(doc.get("$DATA$")))
+				temp=doc.get("$DATA$")
+				data=snappy.uncompress(base64.b64decode(temp))
 			else:
-				data=doc.get("$DATA$")
+				temp=doc.get("$DATA$")
+				data=base64.b64decode(temp)
 
 				
 			#non primary key filtering(without having to load all the primary key filtered values into main memory!)	
@@ -243,9 +251,12 @@ def update(primary_keys_map,to_be_compressed_input,collection_name,tofind,update
 				return 101
 		#compress data using snappy if compression is on		
 		if to_be_compressed_input==True:
-			data_string=snappy.compress(str(json.dumps(data)))
+			temp=json.dumps(data)
+			data_string=base64.b64encode(snappy.compress(temp))
 		else:
-			data_string=json.dumps(data)	
+			temp=json.dumps(data)
+			data_string=base64.b64encode(temp)
+
 		field=Field("$DATA$",data_string,Field.Store.YES,Field.Index.ANALYZED)
 		doc.add(field)
 		writer.addDocument(doc)
@@ -271,9 +282,11 @@ def update(primary_keys_map,to_be_compressed_input,collection_name,tofind,update
 		for hit in hits:
 			doc=searcher.doc(hit.doc)
 			if to_be_compressed_input==True:
-				data=snappy.uncompress(doc.get("$DATA$"))
+				temp=doc.get("$DATA$")
+				data=snappy.uncompress(base64.b64decode(temp))
 			else:
-				data=doc.get("$DATA$")
+				temp=doc.get("$DATA$")
+				data=base64.b64decode(temp)
 			#non primary key filtering(without having to load all the primary key filtered values into main memory!)	
 			if len(tofind_nonprimary_keyvalue_pairs)>0:
 				entry=json.loads(data)
@@ -300,9 +313,11 @@ def update(primary_keys_map,to_be_compressed_input,collection_name,tofind,update
 		for i in range(0,ireader.numDocs()):
 			doc=searcher.doc(i)
 			if to_be_compressed_input==True:
-				data=snappy.uncompress(doc.get("$DATA$"))
+				temp=doc.get("$DATA$")
+				data=snappy.uncompress(base64.b64decode(temp))
 			else:
-				data=doc.get("$DATA$")
+				temp=doc.get("$DATA$")
+				data=base64.b64decode(temp)
 			#non primary key filtering(without having to load all the primary key filtered values into main memory!)	
 			if len(tofind_nonprimary_keyvalue_pairs)>0:
 				entry=json.loads(data)
