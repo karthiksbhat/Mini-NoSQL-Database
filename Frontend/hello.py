@@ -6,7 +6,8 @@ import tkMessageBox
 #Function to process the query
 def process_query(*args):
 	value = query.get()
-	# print value
+	
+	#Displays obtained result in a pop-up box.
 	output=os.popen('python queryLanguage.py "'+value+'"').read()
 	tkMessageBox.showinfo("answer",output)
 
@@ -17,6 +18,7 @@ def process_query(*args):
 root = Tk()
 root.title("Welcome to NoSQL database")
 
+#GUI Configuration
 mainframe = ttk.Frame(root, padding="100 100 100 100")
 mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
 mainframe.columnconfigure(0, weight=1)
@@ -25,11 +27,13 @@ mainframe.rowconfigure(0, weight=1)
 query = StringVar()
 meters = StringVar()
 
+#text area to accept input
 query_entry = ttk.Entry(mainframe, width=100, textvariable=query)
 query_entry.grid(column=2, row=11, sticky=(W, E))
 
 ttk.Label(mainframe, textvariable=meters).grid(column=2, row=3, sticky=(W, E))
 
+#Defining contents of the GUI display
 ttk.Label(mainframe, text="QUERY LANGUAGE SYNTAX").grid(column=2, row=1)
 ttk.Label(mainframe, text="").grid(column=2, row=2, sticky=N)
 ttk.Label(mainframe, text="Insert Query - insert (in) collection: <collection-name> primary_keys:<value>(s) compressed: true|false <attributes>: <values>").grid(column=2, row=3, sticky=W)
