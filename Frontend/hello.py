@@ -2,6 +2,8 @@ from Tkinter import *
 import ttk
 import os
 import tkMessageBox
+
+#Function to process the query
 def process_query(*args):
 	value = query.get()
 	# print value
