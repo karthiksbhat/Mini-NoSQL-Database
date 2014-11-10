@@ -6,15 +6,6 @@ import json
 import unicodedata
 conn = http.HTTPConnection('10.42.0.1:3000')
 
-"""
-print "Welcome to NoSQL-Name Database. You are currently using version 0.1. Here are a few specifications to follow while entering your queries."
-print "1. insert in collection=<collection> <attribute>=<value> <attribute>=<value>  and so on. It may be variable."
-print "2. delete from collection=<collection> <attribute>=<value> <attribute>=<value> and so on."
-print "3. modify collection=<collection> <attribute>=<value> <attribute>=<new_value>"
-print "4. display collection=<collection> <attribute>=<value>"
-print "Note: There are to be no commas in the commands"
-"""
-
 query = str(sys.argv[1])
 
 insertVar = re.match('^insert .*', query, re.M|re.I)
@@ -23,6 +14,7 @@ descVar = re.match('^describe .*', query, re.M|re.I)
 modifyVar = re.match('^modify .*', query, re.M|re.I)
 displayVar = re.match('^display .*', query, re.M|re.I)
 dropVar = re.match('^drop .*', query, re.M|re.I)
+numberVar = re.match('^number .*', query, re.M|re.I)
 #####################################################
 
 #split by space, to obtain keywords
@@ -70,6 +62,10 @@ if insertVar:
     collection= matches[0].replace("collection: ","collection:").split(":")
     collName= collection[1].strip()
     matches.remove(matches[0])
+
+    for match in matches:
+        match=match.replace(" ", "_")
+
     keyvalue=""
     #print collName
     for match in matches:
@@ -340,8 +336,40 @@ if dropVar:
         print "\n"
 
 #####################################################################################################################################
+if numberVar:
+    regex = re.compile(r'''
+    [\S]+:                # a key (any word followed by a colon)
+    (?:
+    \s                    # then a space in between
+        (?!\S+:)\S+       # then a value (any word not followed by a colon)
+    )+                    # match multiple values if present
+    ''', re.VERBOSE)
 
+    matches = regex.findall(query)
 
+    #conn.request("GET","/api/desc?"+"collection="+collName
+    collection= matches[0].replace("collection: ","collection:").split(":")
+    collName= collection[1].strip()
+    matches.remove(matches[0])
+
+    params = urllib.urlencode({'collection': collName})
+    headers = {"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
+    conn.request("POST","/api/number", params, headers)
+
+    # print "/api/desc?"+"collection="+collName
+    # conn.request("GET","/api/desc?"+"collection="+collName)
+    a=conn.getresponse()
+    var1= json.load(a)
+    var2=unicodedata.normalize('NFKD', var1['response']).encode('ascii','ignore')
+    eval(var2)
+    list1= eval(var2.replace("u\'{", "\'{"))
+
+    for a in list1:
+        b=json.loads(a)
+        for c in b:
+            print c+"->"+b[c]
+        print "\n"
+#####################################################################################################################################
 
 """
 if words[0]=="insert":

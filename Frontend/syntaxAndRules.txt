@@ -4,7 +4,7 @@ Syntax
 1. Insert
 	This is a command to insert an entry to a collection.
 	Syntax
-		insert in collection: <collection-name> primary_keys:<value>,<value>,<value>(*) compressed: true|false <attributes>: <values>
+		insert in collection: <collection-name> primary_keys:<value>(s) compressed: true|false <attributes>: <values>
 
 2. Modify
 	This is a command to modify an entered entry to the collection.
@@ -29,3 +29,13 @@ Syntax
 	This is a command to describe the collection specified.
 	Syntax
 		describe collection: <collection-name>
+
+6. Number
+	This is a query to display the number of elements in the specified collection.
+	Syntax
+		number collection: <collection-name>
+
+7. Drop
+	This is a query to destroy a collection.
+	Syntax
+		drop collection: <collection-name>
