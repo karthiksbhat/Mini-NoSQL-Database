@@ -7,34 +7,34 @@ The query language is designed to work similar to SQL. We will be generating que
 1. Insert
 	This is a command to insert an entry to a collection.
 	Syntax
-		insert in collection: <collection-name> primary_keys:<value>(s) compressed: true|false <attributes>: <values>
+		insert in collection: &lt;collection-name&gt; primary_keys:&lt;value&gt;(s) compressed: true|false &lt;attributes&gt;: &lt;values&gt;
 2. Modify
 	This is a command to modify an entered entry to the collection.
 	Syntax
-		modify collection: <collection-name> <attribute>: <value>(s) NEWVALUES <attribute>: <new-value>(s)
+		modify collection: &lt;collection-name&gt; &lt;attribute&gt;: &lt;value&gt;(s) NEWVALUES &lt;attribute&gt;: &lt;new-value&gt;(s)
 3. Delete
 	This is a command to delete an entry in the collection.
 	Syntax
-		delete from collection: <collection-name> <attribute>: <value>(s)
+		delete from collection: &lt;collection-name&gt; &lt;attribute&gt;: &lt;value&gt;(s)
 4. Display
 	This is a command to display all elements in a collection.
 	Syntax
-		display collection: <collection-name> <attribute>: <value> <attribute>: <value>(*)
+		display collection: &lt;collection-name&gt; &lt;attribute&gt;: &lt;value&gt; &lt;attribute&gt;: &lt;value&gt;(*)
 	Suppose an attribute is not mentioned.
 	Syntax
-		display collection: <collection-name>
+		display collection: &lt;collection-name&gt;
 5. Describe
 	This is a command to describe the collection specified.
 	Syntax
-		describe collection: <collection-name>
+		describe collection: &lt;collection-name&gt;
 6. Number
 	This is a query to display the number of elements in the specified collection.
 	Syntax
-		number collection: <collection-name>
+		number collection: &lt;collection-name&gt;
 7. Drop
 	This is a query to destroy a collection.
 	Syntax
-		drop collection: <collection-name>
+		drop collection: &lt;collection-name&gt;
 
 Currently, it does not have the capacity to handle complex queries.
 
