@@ -107,7 +107,7 @@ def on_request(ch, method, props, body):
             SUCCESS_MESSAGE = handler.store(primarykeys,to_be_compressed_input,collection_name,data)
 
             if SUCCESS_MESSAGE==000:
-                SUCCESS_MESSAGE = repr([json.dumps({"error":"added to database successfully!"})])
+                SUCCESS_MESSAGE = repr([json.dumps({"SUCCESS":"added to database successfully!"})])
                                 
                             #later add success/failure codes for denoting what failed
             elif SUCCESS_MESSAGE==100:
@@ -150,7 +150,7 @@ def on_request(ch, method, props, body):
                 elif SUCCESS_MESSAGE==106:
                     SUCCESS_MESSAGE = repr([json.dumps({"error":"Record with same primary keys already exists!"})])
                 else:
-                    SUCCESS_MESSAGE = repr([json.dumps({"error":SUCCESS_MESSAGE})])
+                    SUCCESS_MESSAGE = repr([json.dumps({"SUCCESS":SUCCESS_MESSAGE})])
             else:
                 SUCCESS_MESSAGE = repr([json.dumps({"error":"Invalid collection_name!"})])
 
@@ -167,7 +167,7 @@ def on_request(ch, method, props, body):
             primarykeys=primary_keys_map[collection_name]
             to_be_compressed_input=to_be_compressed_map[collection_name]
             SUCCESS_MESSAGE = handler.desc(primarykeys,to_be_compressed_input,collection_name)
-            SUCCESS_MESSAGE = repr([json.dumps({"error":SUCCESS_MESSAGE})])    
+            SUCCESS_MESSAGE = repr([json.dumps({"SUCCESS":SUCCESS_MESSAGE})])    
 
     elif request[2] == "drop":
         collection_name = request[1]
@@ -187,7 +187,7 @@ def on_request(ch, method, props, body):
             f.close()
             
             SUCCESS_MESSAGE = handler.drop(collection_name)
-            SUCCESS_MESSAGE = repr([json.dumps({"error":SUCCESS_MESSAGE})])
+            SUCCESS_MESSAGE = repr([json.dumps({"SUCCESS":SUCCESS_MESSAGE})])
         
 
                             
