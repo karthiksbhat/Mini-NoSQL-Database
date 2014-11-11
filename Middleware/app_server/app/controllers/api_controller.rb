@@ -188,4 +188,22 @@ class ApiController < ApplicationController
 		render json: response_json
 	end
 
+	def number
+		#sample api query
+		#/api/number?collection=<collection_name>
+		collection=params[:collection]
+		f=File.open("/home/nitin/Desktop/DATABASE-PROJECT/request_files/temp.txt","w")
+		f.puts "send.py"
+		f.puts collection
+		f.puts "number"
+		f.close
+		display_output='python /home/nitin/Desktop/DATABASE-PROJECT/send.py temp.txt'
+		puts display_output
+		return_output = `#{display_output}`
+		puts return_output
+		response_json = {'response'=>return_output}.to_json
+
+		render json: response_json
+	end
+
 end

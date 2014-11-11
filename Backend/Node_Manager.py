@@ -75,7 +75,7 @@ def on_request(ch, method, props, body):
             SUCCESS_MESSAGE = repr([json.dumps({"error":"JSON format error!Check input!"})])
             
         elif SUCCESS_MESSAGE==000:
-            SUCCESS_MESSAGE = repr([json.dumps({"error":"deleted appropriate records!"})])
+            SUCCESS_MESSAGE = repr([json.dumps({"SUCCESS":"deleted appropriate records!"})])
 
     elif request[2] == "store":
         collection_name = request[1]
