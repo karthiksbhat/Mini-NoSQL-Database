@@ -59,7 +59,6 @@ matches = regex.findall(query)
 
 if insertVar:
 
-    #/api/insert?collection=<collection_name>&values=[attr1:val1,attr2:val2]&primary_keys="key1,key2"&compressed=True|true|false
     #The below regex defenition is used to determine major fields in the query.
     # It finds a colon, and takes the word before the colon, the colon, a space, next few words
     #as a match.
@@ -71,8 +70,7 @@ if insertVar:
     )+                    # match multiple values if present
     ''', re.VERBOSE)
 
-    #conn.request("GET","/api/insert?"+"collection="+collName+"&values=["+keyvalue+"]&primary_keys="+primaryKey+"&compressed="+compressed
-
+    
     matches = regex.findall(query)
     #Set collection variable as the element 'collection:collection-name'
     #and remove the entry from the list.
@@ -82,7 +80,6 @@ if insertVar:
 
     #keyvalue holds a string of all key:value pairs, and is populated by the loop.
     keyvalue=""
-    #print collName
     for match in matches:
         temp=match.split(": ")
         if(not(temp[0].strip()=="primary_keys" or temp[0].strip()=="compressed")):
@@ -108,9 +105,6 @@ if insertVar:
     params = urllib.urlencode({'collection': collName,'values':"["+keyvalue+"]",'primary_keys':'"'+primaryKey+'"','compressed':compressed})
     headers = {"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
     conn.request("POST","/api/insert", params, headers)
-
-    # print "/api/insert?"+"collection="+collName+"&values=["+keyvalue+"]&primary_keys="+primaryKey+"&compressed="+compressed
-    # conn.request("GET","/api/insert?"+"collection="+collName+"&values=["+keyvalue+"]&primary_keys="+primaryKey+"&compressed="+compressed)
     
     #a captures the response obtained from sending the data to the middleware
     a=conn.getresponse()
@@ -143,7 +137,6 @@ if deleteVar:
     ''', re.VERBOSE)
     matches = regex.findall(query)
 
-    #conn.request("GET","/api/delete?"+"collection="+collName+"&values=["+keyvalue+"]"
     #Set collection variable as the element 'collection:collection-name'
     #and remove the entry from the list.
     collection= matches[0].replace("collection: ","collection:").split(":")
@@ -152,7 +145,6 @@ if deleteVar:
 
     #keyvalue holds a string of all key:value pairs, and is populated by the loop.
     keyvalue=""
-    #print collName
     for match in matches:
         temp=match.split(": ")
         if(not(temp[0].strip()=="primary_keys" or temp[0].strip()=="compressed")):
@@ -164,8 +156,6 @@ if deleteVar:
     params = urllib.urlencode({'collection': collName,'values':"["+keyvalue+"]"})
     headers = {"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
     conn.request("POST","/api/delete", params, headers)
-    #print "/api/delete?"+"collection="+collName+"&values=["+keyvalue+"]"
-    #conn.request("GET","/api/delete?"+"collection="+collName+"&values=["+keyvalue+"]")
 
     #a captures the response obtained from sending the data to the middleware
     a=conn.getresponse()
@@ -200,7 +190,6 @@ if displayVar:
     ''', re.VERBOSE)
     matches = regex.findall(query)
 
-    #conn.request("GET","/api/delete?"+"collection="+collName+"&values=["+keyvalue+"]"
 
     #Set collection variable as the element 'collection:collection-name'
     #and remove the entry from the list.
@@ -210,7 +199,6 @@ if displayVar:
 
     #keyvalue holds a string of all key:value pairs, and is populated by the loop.
     keyvalue=""
-    #print collName
     for match in matches:
         temp=match.split(": ")
         if(not(temp[0].strip()=="primary_keys" or temp[0].strip()=="compressed")):
@@ -222,8 +210,6 @@ if displayVar:
     params = urllib.urlencode({'collection': collName,'values':"["+keyvalue+"]"})
     headers = {"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
     conn.request("POST","/api/display", params, headers)
-
-    #conn.request("GET","/api/display?"+"collection="+collName+"&values=["+keyvalue+"]")
 
     #a captures the response obtained from sending the data to the middleware
     a=conn.getresponse()
@@ -279,7 +265,7 @@ if modifyVar:
     #keyvalueNew holds the updated values of the key:value pairs.
     keyvalueOld=""
     keyvalueNew=""
-    #conn.request("GET","/api/modify?"+"collection="+collName+"&conditions=["+keyvalueOld+"]&values=["+keyvalueNew+"]"
+    
     for match in matchesOld:
         temp=match.split(": ")
         if(not(temp[0].strip()=="primary_keys" or temp[0].strip()=="compressed")):
@@ -298,8 +284,6 @@ if modifyVar:
     params = urllib.urlencode({'collection': collName,'conditions':"["+keyvalueOld+"]",'values':"["+keyvalueNew+"]"})
     headers = {"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
     conn.request("POST","/api/modify", params, headers)
-    #print "/api/modify?"+"collection="+collName+"&conditions=["+keyvalueOld+"]&values=["+keyvalueNew+"]"
-    #conn.request("GET","/api/modify?"+"collection="+collName+"&conditions=["+keyvalueOld+"]&values=["+keyvalueNew+"]")
 
     #a captures the response obtained from sending the data to the middleware
     a=conn.getresponse()
@@ -336,7 +320,6 @@ if descVar:
 
     matches = regex.findall(query)
 
-    #conn.request("GET","/api/desc?"+"collection="+collName
     #Set collection variable as the element 'collection:collection-name'
     #and remove the entry from the list.
     collection= matches[0].replace("collection: ","collection:").split(":")
@@ -348,9 +331,6 @@ if descVar:
     headers = {"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
     conn.request("POST","/api/desc", params, headers)
 
-    # print "/api/desc?"+"collection="+collName
-    # conn.request("GET","/api/desc?"+"collection="+collName)
-
     #a captures the response obtained from sending the data to the middleware
     a=conn.getresponse()
 
@@ -358,17 +338,13 @@ if descVar:
     #The below code is to decode the data.
     var1= json.load(a)
     var2=var1['response']
-    # var2=unicodedata.normalize('NFKD', var1['response']).encode('ascii','ignore')
     eval(var2)
     list1= eval(var2.replace("u\'{", "\'{"))
 
     #The code for printing out the output data.
     for a in list1:
         b=json.loads(a)
-        # print b
         for c in b:
-            # print type(c)
-            # print type(b)
             print c+"->"+json.dumps(b[c])
         print "\n"
 
@@ -390,7 +366,6 @@ if dropVar:
 
     matches = regex.findall(query)
 
-    #conn.request("GET","/api/desc?"+"collection="+collName
     #Set collection variable as the element 'collection:collection-name'
     #and remove the entry from the list.
     collection= matches[0].replace("collection: ","collection:").split(":")
@@ -401,9 +376,6 @@ if dropVar:
     params = urllib.urlencode({'collection': collName})
     headers = {"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
     conn.request("POST","/api/drop", params, headers)
-
-    # print "/api/desc?"+"collection="+collName
-    # conn.request("GET","/api/desc?"+"collection="+collName)
 
     #a captures the response obtained from sending the data to the middleware
     a=conn.getresponse()
@@ -452,9 +424,6 @@ if numberVar:
     headers = {"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
     conn.request("POST","/api/number", params, headers)
 
-    # print "/api/desc?"+"collection="+collName
-    # conn.request("GET","/api/desc?"+"collection="+collName)
-
     #a captures the response obtained from sending the data to the middleware
     a=conn.getresponse()
 
@@ -464,11 +433,11 @@ if numberVar:
     var2=unicodedata.normalize('NFKD', var1['response']).encode('ascii','ignore')
     eval(var2)
     list1= eval(var2.replace("u\'{", "\'{"))
-
+    print list1
     #The code for printing out the output data.
-    for a in list1:
+    '''for a in list1:
         b=json.loads(a)
         for c in b:
             print c+"->"+b[c]
-        print "\n"
+        print "\n"'''
 #####################################################################################################################################

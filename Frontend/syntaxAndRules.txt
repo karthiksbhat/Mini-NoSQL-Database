@@ -1,10 +1,10 @@
-Thank you for using this <unnamed> NoSQL database v0.1, with the <unnamed> Language. We define here the rules of the language. We have tried to make it as user friendly as possible, and if you think something needs to be changed, please feel free to access our source code at http://github.com/karthiksbhat/Mini-NoSQL-Database and contribute to it.
+Thank you for using this noPandaDB v1.1, with the noPandaQL Language. We define here the rules of the language. We have tried to make it as user-friendly as possible, and if you think something needs to be improved, please feel free to access our source code at http://github.com/karthiksbhat/Mini-NoSQL-Database and contribute to it.
 
 Syntax
 1. Insert
 	This is a command to insert an entry to a collection.
 	Syntax
-		insert in collection: <collection-name> primary_keys:<value>(s) compressed: true|false <attributes>: <values>
+		insert in collection: <collection-name> primary_keys:<value>,<value>(s) compressed: true|false <attributes>: <values>
 
 2. Modify
 	This is a command to modify an entered entry to the collection.
@@ -33,7 +33,7 @@ Syntax
 6. Number
 	This is a query to display the number of elements in the specified collection.
 	Syntax
-		number collection: <collection-name>
+		number of collection: <collection-name>
 
 7. Drop
 	This is a query to destroy a collection.
