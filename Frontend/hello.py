@@ -12,7 +12,7 @@ def process_query(*args):
 	tkMessageBox.showinfo("answer",output)
     
 root = Tk()
-root.title("Welcome to noPandaDB")
+root.title("noPandaDB-Plus")
 
 #GUI Configuration
 mainframe = ttk.Frame(root, padding="100 100 100 100")
